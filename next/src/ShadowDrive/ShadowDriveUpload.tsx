@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { ShdwDrive } from "@shadow-drive/sdk";
+import { ShdwDrive, ShadowUploadResponse } from "@shadow-drive/sdk";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { CONNECTION_MAINNET } from "../util/const";
-import { tailwindColours } from '../ShadowDrive/tailwindColours';
 
+//import { tailwindColours } from '../ShadowDrive/tailwindColours';
 //var nearestColor = require('nearest-color').from(tailwindColours);
   
 export default function Upload() {
-    const [file, setFile] = useState<File>(undefined)
-    const [uploadUrl, setUploadUrl] = useState<String>(undefined)
-    const [txnSig, setTxnSig] = useState<String>(undefined)
+    const [file, setFile] = useState<any>()
+    const [uploadUrl, setUploadUrl] = useState<any>()
+    const [txnSig, setTxnSig] = useState<any>()
     const wallet = useWallet();
 
     const onSubmit = async (event: any) => {
@@ -72,14 +72,14 @@ export default function Upload() {
         const upload = await drive.uploadFile(acc, file);
         console.log(upload);
         setUploadUrl(upload.finalized_locations)
-        setTxnSig(upload.transaction_signature)        
+        setTxnSig(upload.message)        
     }
 
     return (
         <div>
             <form onSubmit={onSubmit}>
                 <h1 className="text-white">Shadow Drive File Upload</h1>
-                <input className="text-white" type="file" onChange={e => setFile(e.target.files[0])} />
+                <input className="text-white" type="file" onChange={(e) => ( e &&e.target &&e.target.files && setFile(e.target.files[0]))} />
                 <br />
                 <button className="text-white" type="submit">Upload</button>
             </form>
