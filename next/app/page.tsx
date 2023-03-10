@@ -166,7 +166,7 @@ export default function Home() {
       try {
         const escapedColor = color.replace("#", "%23");
         const url =
-          "https://6956-77-8-190-129.eu.ngrok.io/api/mint?x=" +
+          "https://one-milion-nfts.vercel.app/api/mint?x=" +
           x +
           "&y=" +
           y +
