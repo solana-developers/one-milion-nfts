@@ -349,7 +349,7 @@ export const getLastCompressedNftIdFromTree = async (
 export const getCompressedNftIdFromTreeById = async (
   connectionWrapper: WrappedConnection,
   treeKeypair: Keypair,
-  leafId: BN.BN
+  leafId: BN
 ) => {
   let mkAccount = await ConcurrentMerkleTreeAccount.fromAccountAddress(
     connectionWrapper,
