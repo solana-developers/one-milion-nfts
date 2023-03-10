@@ -61,17 +61,6 @@ class SketchExample extends React.Component<IProps, any>  {
           marginLeft: "4px",
           height: 28
         },
-        popover: {
-          position: "absolute",
-          zIndex: "2"
-        },
-        cover: {
-          position: "fixed",
-          top: "0px",
-          right: "0px",
-          bottom: "0px",
-          left: "0px"
-        }
       }
     });
 
@@ -81,8 +70,8 @@ class SketchExample extends React.Component<IProps, any>  {
           <div style={styles.color} />
         </div>
         {this.state.displayColorPicker ? (
-          <div style={styles.popover}>
-            <div style={styles.cover} onClick={this.handleClose} />
+          <div className='absolute'>
+            <div className='fixed inset-0' onClick={this.handleClose} />
             <SwatchesPicker
               color={this.state.color}
               onChange={this.handleChange}
