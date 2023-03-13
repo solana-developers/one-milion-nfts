@@ -291,9 +291,9 @@ export const mintCompressedNft = async (
   const mintIx = createMintToCollectionV1Instruction(
     {
       merkleTree: treeKeypair,
-      treeAuthority,
+      treeAuthority: treeAuthority,
       treeDelegate: ownerKeypair,
-      payer: feepayer,
+      payer: feepayer, 
       leafDelegate: feepayer,
       leafOwner: feepayer,
       compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
@@ -415,9 +415,12 @@ export const transferAsset = async (
   const treeAuthority = await getBubblegumAuthorityPDA(
     new PublicKey(assetProof.tree_id)
   );
+
   const leafDelegate = rpcAsset.ownership.delegate
     ? new PublicKey(rpcAsset.ownership.delegate)
     : new PublicKey(rpcAsset.ownership.owner);
+
+  console.log("Delegate: " + leafDelegate.toBase58() + " Owner: " + rpcAsset.ownership.owner);
 
   let mkAccount = await ConcurrentMerkleTreeAccount.fromAccountAddress(
     connectionWrapper,
@@ -442,7 +445,7 @@ export const transferAsset = async (
       anchorRemainingAccounts: slicedProofPath,
     },
     {
-      root: bufferToArray(bs58.decode(assetProof.root)),
+      root: bufferToArray(bs58.decode(slicedProofPath[0].pubkey.toBase58())),
       dataHash: bufferToArray(
         bs58.decode(rpcAsset.compression.data_hash.trim())
       ),
@@ -465,8 +468,10 @@ export const redeemAsset = async (
 ) => {
   let assetProof = await connectionWrapper.getAssetProof(assetId);
   const rpcAsset = await connectionWrapper.getAsset(assetId);
-  const voucher = await getVoucherPDA(new PublicKey(assetProof.tree_id), 0);
   const leafNonce = rpcAsset.compression.leaf_id;
+  console.log("leafNonce: " + leafNonce); 
+  const voucher = await getVoucherPDA(new PublicKey(assetProof.tree_id), rpcAsset.compression.leaf_id);
+  console.log("voucher: " + voucher.toBase58());
   const treeAuthority = await getBubblegumAuthorityPDA(
     new PublicKey(assetProof.tree_id)
   );

@@ -202,6 +202,7 @@ export default function Home() {
       alert("Please connect wallet to decompress your nft.");
       return;
     }
+    console.log ("Decompressing: " + asset);
     const transaction = await redeemAsset(CONNECTION, publicKey, asset);
     const signature = await sendTransaction(transaction, CONNECTION, {
       skipPreflight: true,
