@@ -235,6 +235,7 @@ export default function Home() {
           <TransferAdressInput
             onCancelCallback={onTransferCancel}
             onTransferCallback={onTransferSubmit}
+            assetId={selectedAsset}
           />
         </div>
       )}
