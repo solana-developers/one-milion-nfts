@@ -11,6 +11,7 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   Signer,
+  AccountMeta,
 } from "@solana/web3.js";
 import { WrappedConnection } from "../wrappedConnection";
 import {
@@ -369,6 +370,17 @@ export const getCompressedNftIdFromTreeById = async (
   return assetId;
 };
 
+export const mapProof = (assetProof: { proof: string[] }): AccountMeta[] => {
+  if (!assetProof.proof || assetProof.proof.length === 0) {
+    throw new Error("Proof is empty");
+  }
+  return assetProof.proof.map((node) => ({
+    pubkey: new PublicKey(node),
+    isSigner: false,
+    isWritable: false,
+  }));
+};
+
 export const transferAsset = async (
   connectionWrapper: WrappedConnection,
   owner: PublicKey,
@@ -383,12 +395,8 @@ export const transferAsset = async (
   if (!assetProof?.proof || assetProof.proof.length === 0) {
     throw new Error("Proof is empty");
   }
-  let proofPath = assetProof.proof.map((node: string) => ({
-    pubkey: new PublicKey(node),
-    isSigner: false,
-    isWritable: false,
-  }));
-  console.log("Successfully got proof path from RPC.");
+
+  let proofPath = mapProof(assetProof);
 
   const rpcAsset = await connectionWrapper.getAsset(assetId);
   console.log(
@@ -410,14 +418,18 @@ export const transferAsset = async (
   const leafDelegate = rpcAsset.ownership.delegate
     ? new PublicKey(rpcAsset.ownership.delegate)
     : new PublicKey(rpcAsset.ownership.owner);
-  const canopyHeight = rpcAsset.compression.seq;
-  // TODO: in the original example the proof path was sliced to canopyHeight. Not sure if that is needed. 
-  const slicedProofPath = proofPath.slice(
+
+  let mkAccount = await ConcurrentMerkleTreeAccount.fromAccountAddress(
+    connectionWrapper,
+    new PublicKey(assetProof.tree_id)
+  );
+  let canopyHeight = mkAccount.getCanopyDepth();
+
+  let slicedProofPath = proofPath.slice(
     0,
     proofPath.length - (!!canopyHeight ? canopyHeight : 0)
-  );
-  console.log("CanopyHight: "+ canopyHeight+ " Sliced proof path: " + slicedProofPath);
-  console.log("Proofpath: "+ proofPath.length);
+  )
+  console.log("CanopyHight: "+ canopyHeight+ " Sliced proof path: " + slicedProofPath.length + " proof path: " + proofPath.length);
   let transferIx = createTransferInstruction(
     {
       treeAuthority,
@@ -427,7 +439,7 @@ export const transferAsset = async (
       merkleTree: new PublicKey(assetProof.tree_id),
       logWrapper: SPL_NOOP_PROGRAM_ID,
       compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-      anchorRemainingAccounts: proofPath,
+      anchorRemainingAccounts: slicedProofPath,
     },
     {
       root: bufferToArray(bs58.decode(assetProof.root)),

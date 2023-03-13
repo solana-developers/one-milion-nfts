@@ -1,6 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
-import React, { FC, useCallback, useEffect, useRef } from "react";
-import Canvas from "./Canvas";
+import React, { FC } from "react";
 import SinglePixelCanvas from "./SinglePixelCanvas";
 
 type Props = {

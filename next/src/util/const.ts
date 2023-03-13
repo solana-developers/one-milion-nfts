@@ -14,8 +14,8 @@ export const CONNECTION = new WrappedConnection(process.env.NEXT_PUBLIC_RPC ? pr
   export const CollectionMint = new PublicKey("5nz36yBLh6Rw9rm8hDzEfAn36gfT7tvYKeS82CFQuZZY");
   export const TreeAccount = new PublicKey("tr13LbiqVZCuuLWUnKAunkNrZVMw1H8fW3Eu9hqoNgv");
 
-  /*
-    Mint account: 5nz36yBLh6Rw9rm8hDzEfAn36gfT7tvYKeS82CFQuZZY
-    Metadata account: E4jD3VGdgJ3NjViv5TSHkDUmAwPWsULqXtJS46wVrdMz
-    Master edition account: AopwdM84PcvAtG35V9kwfxn4HEDw8CV4eDsNLf1AHcJd
-  */
+/*
+  Mint account: 5nz36yBLh6Rw9rm8hDzEfAn36gfT7tvYKeS82CFQuZZY
+  Metadata account: E4jD3VGdgJ3NjViv5TSHkDUmAwPWsULqXtJS46wVrdMz
+  Master edition account: AopwdM84PcvAtG35V9kwfxn4HEDw8CV4eDsNLf1AHcJd
+*/

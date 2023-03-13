@@ -54,6 +54,9 @@ export default function Canvas(props: CanvasProps) {
   const isResetRef = useRef<boolean>(false);
   const lastMousePosRef = useRef<Point>(ORIGIN);
   const lastOffsetRef = useRef<Point>(ORIGIN);
+  const [tooltip, setTooltip] = useState<string>("");
+  const [nftAddress, setNftAddress] = useState<string>("");
+  const [hoverPixel, setHoverPixel] = useState<boolean>(false);
 
   // update last offset
   useEffect(() => {
@@ -187,6 +190,7 @@ export default function Canvas(props: CanvasProps) {
       context.fillStyle = "white";
       context.clearRect(-6000, -6000, 12000, 12000);
       context.fillRect(0, 0, 1000, 1000);
+      let hoverPixel = false;
 
       for (var i = 0; i < props.nftData.items.length; i++) {
         const nft = props.nftData.items[i];
@@ -201,10 +205,16 @@ export default function Canvas(props: CanvasProps) {
           //console.log("name: " + name + "color " + props.nftPixels[x][y].color);
           context.fillStyle = props.nftPixels[x][y].color;
           context.fillRect(x, y, 1, 1);
+          if (x == pixelPosition.x && y == pixelPosition.y) {
+            setTooltip(nft.content.metadata.name);
+            setNftAddress(nft.ownership.owner);
+            hoverPixel = true;
+          }
         } catch (e) {
           //console.log("error " + e);
         }
       }
+      setHoverPixel(hoverPixel);
 
       context.fillStyle = props.color;
       context.fillRect(pixelPosition.x , pixelPosition.y, 1, 1);
@@ -216,7 +226,7 @@ export default function Canvas(props: CanvasProps) {
     context,
     scale,
     offset,
-    viewportTopLeft,
+    //viewportTopLeft,
     pixelPosition,
     props.nftData,
     props.nftPixels,
@@ -312,13 +322,19 @@ export default function Canvas(props: CanvasProps) {
   }, [context, mousePos.x, mousePos.y, viewportTopLeft, scale]);
 
   return (
-    <div>
+    <div className={"group flex "+ (hoverPixel ? "relative" : "")}>
+      {hoverPixel &&  <span className="group-hover:opacity-100 transition-opacity bg-gray-800 px-1 text-sm text-gray-100 rounded-md absolute left-1/2 
+    -translate-x-1/2 translate-y-full opacity-0 m-4 mx-auto">
+      {tooltip} <br></br>
+      {nftAddress}
+      </span>
+    }
       {/*<button className="text-white" onClick={() => context && reset(context)}>Reset</button>
       <pre>scale: {scale}</pre>
       <pre>offset: {JSON.stringify(offset)}</pre>
       <pre>viewportTopLeft: {JSON.stringify(viewportTopLeft)}</pre>
       <pre>pixel position: {JSON.stringify(pixelPosition)}</pre>*/}
-      <canvas
+      <canvas 
         onMouseDown={startPan}     
         onClick={handleClick}   
         ref={canvasRef}
