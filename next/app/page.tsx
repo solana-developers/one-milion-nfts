@@ -7,7 +7,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 
 import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
 import { Grid } from "@/src/components/Grid";
-import SketchExample from "@/src/components/ColorPicker";
 import LoadingSpinner from "@/src/components/LoadingSpinner";
 import { MyPixels } from "@/src/components/MyPixels";
 import Upload from "@/src/ShadowDrive/ShadowDriveUpload";
