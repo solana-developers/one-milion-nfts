@@ -1,8 +1,14 @@
 "use client"; // this makes next know that this page should be rendered in the client
-import React, { useEffect, useRef, useState } from "react";
-import { CollectionMint, CONNECTION, TreeAccount } from "@/src/util/const";
+import React, { useEffect, useState } from "react";
+import {
+  CONNECTION,
+  TreeAccount,
+} from "@/src/util/const";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
@@ -10,7 +16,11 @@ import { Grid } from "@/src/components/Grid";
 import LoadingSpinner from "@/src/components/LoadingSpinner";
 import { MyPixels } from "@/src/components/MyPixels";
 import Upload from "@/src/ShadowDrive/ShadowDriveUpload";
-import { redeemAsset, transferAsset } from "@/src/util/utils";
+import {
+  decompress,
+  redeemAsset,
+  transferAsset,
+} from "@/src/util/utils";
 import TransferAdressInput from "@/src/components/TransferAdressInput";
 import ColorPicker from "@/src/components/CustomColorPicker";
 
@@ -25,7 +35,7 @@ export default function Home() {
   const [selectedAsset, setSelectedAsset] = React.useState("");
 
   const colorSketchPickerOnOkHandle = (color: string) => {
-    console.log("Color picker: " + color);
+    //console.log("Color picker: " + color);
     setColor(color);
   };
 
@@ -38,7 +48,6 @@ export default function Home() {
       return;
     }
     try {
-      console.log(publicKey.toBase58());
       console.log(
         "transfer to: " +
           address +
@@ -68,7 +77,7 @@ export default function Home() {
   };
 
   const getMerkelTreeInfo = async () => {
-    console.log("load tree");
+    console.log("Load tree data");
     let treeAccount = await ConcurrentMerkleTreeAccount.fromAccountAddress(
       CONNECTION,
       TreeAccount
@@ -99,33 +108,20 @@ export default function Home() {
     console.log(allAssetsOwned);
   }
 
-  async function getAssetsByGroup(collection: string) {
-    const sortBy = {
-      sortBy: "created",
-      sortDirection: "asc",
-    };
-    const limit = 500;
-    const page = 1;
-    const before = "";
-    const after = "";
-    const allAssetsOwned = await CONNECTION.getAssetsByGroup(
-      "collection",
-      collection,
-      sortBy,
-      limit,
-      page,
-      before,
-      after
-    );
-
-    setAllNFTsOfCollection(allAssetsOwned);
-    console.log(allAssetsOwned);
+  async function getCachedNftsFromAPI() {
+    const currentBaseUrl = window.location.href;
+    let result = await fetch(currentBaseUrl + "/api/nfts/");
+    let data = await result.json();
+    setAllNFTsOfCollection(data);
   }
 
   // Get all pixels as soon as the page loads
   useEffect(() => {
     getMerkelTreeInfo();
-    getAssetsByGroup(CollectionMint.toBase58());
+    // This will be too slow for the whole collection so we cache the pixels in the backend and get them via API
+    // getAssetsByGroup(CollectionMint.toBase58());
+    getCachedNftsFromAPI();
+    console.log("Request nfts");
   }, []);
 
   // Get user pixels as soon as his wallet is connected
@@ -141,13 +137,14 @@ export default function Home() {
       return;
     }
     setLoading(true);
-    const getpartialSignedTransactionFromApiAndSign = async () => {
+    const getPartialSignedTransactionFromApiAndSign = async () => {
       try {
         const escapedColor = color.replace("#", "%23");
         const currentBaseUrl = window.location.href;
         console.log(currentBaseUrl);
-        const url =
-        currentBaseUrl+"/api/mint?x=" +
+        let url =
+          currentBaseUrl +
+          "/api/mint?x=" +
           x +
           "&y=" +
           y +
@@ -167,19 +164,37 @@ export default function Home() {
         const signature = await sendTransaction(transaction, CONNECTION, {
           skipPreflight: true,
         });
+
         console.log("Mint Signature: " + signature);
         await CONNECTION.confirmTransaction(signature, "confirmed");
+
+        url =
+          currentBaseUrl +
+          "/api/success?x=" +
+          x +
+          "&y=" +
+          y +
+          "&color=" +
+          escapedColor +
+          "&pubkey=" +
+          publicKey.toBase58();
+        // After the mint we inform the backend that the mint was successful to add it to the cache.
+        // Probably not the best way to do it. We could also mint in the backend, but I dont have that much sol. 
+        // Or use a helius webhook to listen to the tree and then update the cache. 
+        const successResponse = await fetch(url);
+
+        // After the mint refresh the list of collection NFTs
+        //await getAssetsByGroup(CollectionMint.toBase58());
+        await getAssetsByOwner(publicKey);
+        await getCachedNftsFromAPI();
       } catch (error) {
         console.log(error);
         setLoading(false);
       }
     };
 
-    await getpartialSignedTransactionFromApiAndSign();
+    await getPartialSignedTransactionFromApiAndSign();
 
-    // After the mint refresh the list of collection NFTs
-    await getAssetsByGroup(CollectionMint.toBase58());
-    await getAssetsByOwner(publicKey);
     setLoading(false);
   };
 
@@ -197,13 +212,33 @@ export default function Home() {
     mintCompressedNFT(x, y, color);
   }
 
-  async function OnDecompressClicked(asset: string) {
+  async function OnRedeemClicked(asset: string) {
+    alert("Redeem is not ready yet. Don't use it. Helius can not handle the redeemed leafs yet.");
+    return;
+
     if (!publicKey) {
       alert("Please connect wallet to decompress your nft.");
       return;
     }
-    console.log ("Decompressing: " + asset);
+    console.log("Decompressing: " + asset);
     const transaction = await redeemAsset(CONNECTION, publicKey, asset);
+    const signature = await sendTransaction(transaction, CONNECTION, {
+      skipPreflight: true,
+    });
+    console.log("signature: " + signature);
+    await CONNECTION.confirmTransaction(signature, "confirmed");
+  }
+
+  async function OnDecompressClicked(asset: string, name: string) {
+    alert("You need to Redeem first and then Decompress. Helius can not handle the redeemed leafs yet.");
+    return;
+
+    if (!publicKey) {
+      alert("Please connect wallet to decompress your nft.");
+      return;
+    }
+    console.log("Decompressing: " + asset);
+    const transaction = await decompress(CONNECTION, publicKey, name, asset);
     const signature = await sendTransaction(transaction, CONNECTION, {
       skipPreflight: true,
     });
@@ -244,7 +279,7 @@ export default function Home() {
 
       <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-slate-900 bg-opacity-70 pt-4">
         <h1 className="mt-0 mb-2 text-5xl font-medium leading-tight text-primary text-center text-white">
-          The One Million NFT Page 2
+          The One Million NFT Page
         </h1>
 
         <div className="flex justify-center gap-0">
@@ -253,9 +288,10 @@ export default function Home() {
             onChangeComplete={colorSketchPickerOnOkHandle}
           />
         </div>
-        <h6 className="mt-0 mb-2 text-s font-medium leading-tight text-primary text-center text-white">
+        
+        <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-white">
           Pick a color - Use mouse wheel to zoom
-        </h6>
+        </h2>
 
         <div className="card flex justify-content-center"></div>
 
@@ -272,7 +308,8 @@ export default function Home() {
           {myNFTs && (
             <>
               <MyPixels
-                onRedeemCallback={OnDecompressClicked}
+                onRedeemCallback={OnRedeemClicked}
+                onDecompressCallback={OnDecompressClicked}
                 onTransferCallback={OnTransferClicked}
                 allNFTs={myNFTs}
               ></MyPixels>
@@ -294,19 +331,27 @@ export default function Home() {
               </button>
               <button
                 onClick={() => {
-                  getAssetsByGroup(CollectionMint.toBase58());
-                }}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Get All Pixels By Collection
-              </button>
-              <button
-                onClick={() => {
                   getAssetsByOwner(publicKey);
                 }}
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               >
                 Get My Pixels By Owner
+              </button>
+              <button
+                onClick={() => {
+                  mintPixels(10);
+                }}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Mint 1000 Pixels
+              </button>
+              <button
+                onClick={() => {
+                  getCachedNftsFromAPI();
+                }}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                getCachedNftsFromAPI
               </button>
             </>
           )}

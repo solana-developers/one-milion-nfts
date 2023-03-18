@@ -3,6 +3,7 @@ import {
   getConcurrentMerkleTreeAccountSize,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
+  MerkleTree
 } from "@solana/spl-account-compression";
 import {
   Keypair,
@@ -12,15 +13,20 @@ import {
   sendAndConfirmTransaction,
   Signer,
   AccountMeta,
+  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import { WrappedConnection } from "../wrappedConnection";
 import {
   createCreateTreeInstruction,
+  createDecompressV1Instruction,
   createMintToCollectionV1Instruction,
   createRedeemInstruction,
   createTransferInstruction,
+  Creator,
   MetadataArgs,
   PROGRAM_ID as BUBBLEGUM_PROGRAM_ID,
+  TokenProgramVersion,
+  TokenStandard,
 } from "@metaplex-foundation/mpl-bubblegum";
 import {
   PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
@@ -38,6 +44,7 @@ import {
   getVoucherPDA,
 } from "./helpers";
 import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
+import { CollectionMint } from "./const";
 
 // Creates a new merkle tree for compression.
 export const initTree = async (
@@ -391,6 +398,7 @@ export const transferAsset = async (
     `Transfering asset ${assetId} from ${owner.toBase58()} to ${newOwner.toBase58()}. 
     This will depend on indexer api calls to fetch the necessary data.`
   );
+
   let assetProof = await connectionWrapper.getAssetProof(assetId);
   if (!assetProof?.proof || assetProof.proof.length === 0) {
     throw new Error("Proof is empty");
@@ -426,6 +434,23 @@ export const transferAsset = async (
     connectionWrapper,
     new PublicKey(assetProof.tree_id)
   );
+
+  console.log("rpcAsset: " + JSON.stringify(rpcAsset));
+
+  console.log("assetProof: " + JSON.stringify(assetProof));
+
+  const MerkleTreeProof = {
+    leafIndex: leafNonce,
+    leaf: rpcAsset.compression.asset_hash,
+    proof: assetProof.proof.map((node:any) => bs58.decode(node)),
+    root: bs58.decode(assetProof.root)
+  };  
+  console.log("rpcAsset: " + JSON.stringify(MerkleTreeProof));
+
+  const isValide= MerkleTree.verify(assetProof.root, MerkleTreeProof, true);
+ 
+  console.log("Is valid: " + isValide);
+
   let canopyHeight = mkAccount.getCanopyDepth();
 
   let slicedProofPath = proofPath.slice(
@@ -487,6 +512,7 @@ export const redeemAsset = async (
       voucher,
       logWrapper: SPL_NOOP_PROGRAM_ID,
       compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+      anchorRemainingAccounts: mapProof(assetProof),
     },
     {
       root: bufferToArray(bs58.decode(assetProof.root)),
@@ -504,3 +530,107 @@ export const redeemAsset = async (
   tx.feePayer = owner;
   return tx;
 };
+
+export const decompress = async (
+  connectionWrapper: WrappedConnection,
+  owner: PublicKey,
+  name: String,
+  assetId?: string,
+) => {
+  let assetProof = await connectionWrapper.getAssetProof(assetId);
+  const rpcAsset = await connectionWrapper.getAsset(assetId);
+  const leafNonce = rpcAsset.compression.leaf_id;
+  console.log("leafNonce: " + leafNonce); 
+  const voucher = await getVoucherPDA(new PublicKey(assetProof.tree_id), rpcAsset.compression.leaf_id);
+  console.log("voucher: " + voucher.toBase58());
+
+  const { collectionMetadataAccount, collectionMasterEditionAccount } =
+    await getCollectionDetailsFromMintAccount(
+      connectionWrapper,
+      CollectionMint,
+      owner
+    );
+
+  console.log("\n===Collection Details===");
+  console.log("Mint account: " + CollectionMint.toBase58());
+  console.log("Metadata account: " + collectionMetadataAccount.toBase58());
+  console.log(
+    "Master edition account: " + collectionMasterEditionAccount.toBase58()
+  );
+  console.log("\n");
+
+  const tokenAccount = await findAssociatedTokenAddress(owner, CollectionMint); 
+
+  const creators: Creator[] = [ { address: new PublicKey("uNgdaBH6cmrq57dBdqXCi6AdTEXHMjFe8wnzutfXVNf"), verified: true, share: 100 } ];
+
+  const x = name.split(".")[0];
+  const y = name.split(".")[1].split("-")[0];
+  const color = name.split(".")[1].split("-")[1];
+
+  const unescapedColor = color.replace("%23", "#");
+
+  const collection = {
+    verified: true,
+    key: CollectionMint
+  }
+
+  // We are saving position and color in the name
+  const nftArgs = {
+    name: x + "." + y + "-" + unescapedColor,
+    symbol: "ONEM",
+    uri: "https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/pixelMetaData.json",
+    creators: creators,
+    editionNonce: 253,
+    tokenProgramVersion: TokenProgramVersion.Original,
+    tokenStandard: TokenStandard.NonFungible,
+    uses: null,
+    collection: collection,
+    primarySaleHappened: false,
+    sellerFeeBasisPoints: 0,
+    isMutable: false,
+  };
+
+  // Voucher: 9B4QxTpv8H4Uod369ykQpg5v3XbtRWqGpjhZTBz278WB
+  console.log("voucher: " + voucher.toBase58());
+  const redeemIx = createDecompressV1Instruction(
+    {
+      voucher: voucher,
+      leafOwner: new PublicKey(rpcAsset.ownership.owner),
+      tokenAccount: tokenAccount,
+      mint: new PublicKey("4stVftUTbGgeJxjx9PMWiu2vukCZM1EQU7GKEfhLHJGP"),
+      mintAuthority: new PublicKey("HFZocwgmBd6BbDbCfiAMkDdYj9VZngKwXFu6xkNLB4PZ"),
+      metadata: collectionMetadataAccount,
+      masterEdition: collectionMasterEditionAccount,
+      systemProgram: SystemProgram.programId,
+      sysvarRent: SYSVAR_RENT_PUBKEY,
+      tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: SPL_NOOP_PROGRAM_ID,
+      logWrapper: SPL_NOOP_PROGRAM_ID,
+      anchorRemainingAccounts: mapProof(assetProof),
+    },
+    {
+      metadata: nftArgs,
+    }
+  );
+  const tx = new Transaction().add(redeemIx);
+  tx.feePayer = owner;
+  return tx;
+};
+
+async function findAssociatedTokenAddress(
+  walletAddress: PublicKey,
+  tokenMintAddress: PublicKey
+): Promise<PublicKey> {
+  return (await PublicKey.findProgramAddress(
+      [
+          walletAddress.toBuffer(),
+          TOKEN_PROGRAM_ID.toBuffer(),
+          tokenMintAddress.toBuffer(),
+      ],
+      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+  ))[0];
+}
+const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: PublicKey = new PublicKey(
+  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+);

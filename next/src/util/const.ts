@@ -11,11 +11,10 @@ export const CONNECTION = new WrappedConnection(process.env.NEXT_PUBLIC_RPC ? pr
     commitment: 'confirmed' 
   });
 
-  export const CollectionMint = new PublicKey("5nz36yBLh6Rw9rm8hDzEfAn36gfT7tvYKeS82CFQuZZY");
-  export const TreeAccount = new PublicKey("tr13LbiqVZCuuLWUnKAunkNrZVMw1H8fW3Eu9hqoNgv");
+  export const CollectionMint = new PublicKey("5o6eT9hrLLdzwNWo5cH784AtrqR18mPaY5kDoQbktHtd");
+  export const TreeAccount = new PublicKey("tr3dw6VYYnjcmj1rTNNnajGyRWYnQK9sQgbFErPwrk7");
 
-/*
-  Mint account: 5nz36yBLh6Rw9rm8hDzEfAn36gfT7tvYKeS82CFQuZZY
-  Metadata account: E4jD3VGdgJ3NjViv5TSHkDUmAwPWsULqXtJS46wVrdMz
-  Master edition account: AopwdM84PcvAtG35V9kwfxn4HEDw8CV4eDsNLf1AHcJd
-*/
+  export const collectionMetadataAccount = new PublicKey("ASqNRbZhV8NMf6nMZCsHK8su3UpfUTYxv6P7ZwvVt1GQ");
+  export const collectionMasterEditionAccount = new PublicKey("2nJeMELovCrDEm4S4KArKcHkc2X5PtF3wgjuutmAEUVK");
+
+

@@ -15,9 +15,9 @@ type POST = {
 }; 
 
 type GET = {
-  transaction: string;
   message: string;
 };
+
 
 function getFromPayload(req: NextApiRequest, payload: string, field: string): string {
   function parseError() { throw new Error(`${payload} parse error: missing ${field}`) };
@@ -50,12 +50,6 @@ const isColor = (strColor: string) => {
 }
 
 const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
-
-  const authorityKeypair = JSON.parse(process.env.TREE_AUTHORITY??"[]");
-  const ownerWallet = Keypair.fromSecretKey(
-    Uint8Array.from(authorityKeypair)
-  );
-
   const xString = getFromPayload(req, 'Query', 'x');
   const x = Number.parseInt(xString);
   const yString = getFromPayload(req, 'Query', 'y');
@@ -64,83 +58,22 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const color = colorString;
   if (!isColor(color)) {
     res.status(400).json({
-      transaction: "",
       message: "Invalid color",
     });
     return;
   }
   const pubkey = getFromPayload(req, 'Query', 'pubkey');
-  const feepayer: PublicKey = new PublicKey(pubkey);
-  
-  console.log("Creator" + ownerWallet.publicKey + "color " + color + "x " + x + "y " + y + "pubkey " + pubkey);
-
-  const { collectionMetadataAccount, collectionMasterEditionAccount } =
-    await getCollectionDetailsFromMintAccount(
-      CONNECTION,
-      CollectionMint,
-      ownerWallet.publicKey
-    );
-
-  console.log("\n===Collection Details===");
-  console.log("Mint account: " + CollectionMint.toBase58());
-  console.log("Metadata account: " + collectionMetadataAccount.toBase58());
-  console.log(
-    "Master edition account: " + collectionMasterEditionAccount.toBase58()
-  );
-  console.log("\n");
-
-  const creators: Creator[] = [ { address: ownerWallet.publicKey, verified: true, share: 100 } ];
 
   console.log("color " + color);
-  const unescapedColor = color.replace("%23", "#");
   const noHashTagColor = color.replace("#", "");
 
-  const collection = {
-    verified: true,
-    key: CollectionMint
-  }
-
-  // We are saving position and color in the name
-  const nftArgs = {
-    name: x + "." + y + "-" + unescapedColor,
-    symbol: "ONEM",
-    uri: "https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/pixelMetaData.json",
-    creators: creators,
-    editionNonce: 253,
-    tokenProgramVersion: TokenProgramVersion.Original,
-    tokenStandard: TokenStandard.NonFungible,
-    uses: null,
-    collection: collection,
-    primarySaleHappened: false,
-    sellerFeeBasisPoints: 0,
-    isMutable: false,
-  };
-  const hash = await CONNECTION.getLatestBlockhash();
-
-  const transaction = await mintCompressedNft(
-    CONNECTION,
-    nftArgs,
-    ownerWallet.publicKey,
-    TreeAccount,
-    CollectionMint,
-    collectionMetadataAccount,
-    collectionMasterEditionAccount,
-    feepayer
-  );
-  transaction.recentBlockhash = hash.blockhash;
-
-  transaction.partialSign(ownerWallet);
-  console.log("transaction " + transaction.instructions.length);
-  
-  const serializedTransaction = transaction.serialize({
-    verifySignatures: false,
-    requireAllSignatures: false,
-  });
-
-  const base64Transaction = serializedTransaction.toString('base64');
+  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(globalCache.get("allNfts") as string);
+  parsedNfts[x][y].c = noHashTagColor;
+  parsedNfts[x][y].o = pubkey;
+  globalCache.set("allNfts", JSON.stringify(parsedNfts));
+  console.log("added color to cache: " + parsedNfts[x][y].c + " to " + x + " " + y + " for " + pubkey);
 
   res.status(200).json({
-    transaction: base64Transaction,
     message: "OK",
   });
 };

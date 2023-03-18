@@ -5,6 +5,7 @@ type Props = {
   children?: React.ReactNode;
   onTransferCallback: (asset: string) => void;
   onRedeemCallback: (asset: string) => void;
+  onDecompressCallback: (asset: string, name: string) => void;
   allNFTs: any;
 };
 
@@ -24,7 +25,7 @@ export class MyPixel {
   }
 }
 
-export const MyPixels: FC<Props> = ({ onRedeemCallback, onTransferCallback, allNFTs }) => {
+export const MyPixels: FC<Props> = ({ onRedeemCallback, onDecompressCallback, onTransferCallback, allNFTs }) => {
   var myParsedPixels = new Array<MyPixel>();
 
   for (var i = 0; i < allNFTs.items.length; i++) {
@@ -61,14 +62,24 @@ export const MyPixels: FC<Props> = ({ onRedeemCallback, onTransferCallback, allN
               canvasWidth={40}
               canvasHeight={40}
             ></SinglePixelCanvas>
-            <button
-              onClick={() => onRedeemCallback(nft.id)}
-              className={
-                "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              }
-            >
-              Redeem
-            </button>
+            { /* 
+                <button
+                  onClick={() => onRedeemCallback(nft.id)}
+                  className={
+                    "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  }
+                >
+                  Redeem
+                </button> 
+                <button
+                  onClick={() => onDecompressCallback(nft.id, nft.name)}
+                  className={
+                    "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  }
+                >
+                  Decompress
+                </button>
+            */ }
             <button
               onClick={() => onTransferCallback(nft.id)}
               className={

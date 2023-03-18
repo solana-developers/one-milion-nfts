@@ -13,7 +13,6 @@ type CanvasProps = {
   canvasWidth: number;
   canvasHeight: number;
   nftPixels: Array<Array<NftPixel>>;
-  nftData: any;
   color: any;
   onClickCallback: (x: Number, y: Number) => void;
 };
@@ -85,7 +84,7 @@ export default function Canvas(props: CanvasProps) {
         isResetRef.current = true;
         const newPoint = {x: 0, y: 0};
 
-        setScale(10);
+        /*setScale(10);
 
         setOffset(newPoint);
         setMousePos(newPoint);
@@ -113,7 +112,7 @@ export default function Canvas(props: CanvasProps) {
         setViewportTopLeft(newViewportTopLeft);
         
         setScale(newLocal);
-        isResetRef.current = false;
+        isResetRef.current = false;*/
       }
     },
     [props.canvasWidth, props.canvasHeight]
@@ -151,7 +150,12 @@ export default function Canvas(props: CanvasProps) {
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+
       if (mouseDownPosition.x == event.pageX && mouseDownPosition.y == event.pageY) {
+        if (hoverPixel) {
+          window.alert("You clicked on a pixel that is already minted!");
+          return;
+        }
         props.onClickCallback(pixelPosition.x, pixelPosition.y);
       }
     },
@@ -188,37 +192,53 @@ export default function Canvas(props: CanvasProps) {
     if (context) {
       if (!context) return;
       context.fillStyle = "white";
+      // Need to clean a bit more since we will be able to move the canvas
       context.clearRect(-6000, -6000, 12000, 12000);
       context.fillRect(0, 0, 1000, 1000);
       let hoverPixel = false;
+      //console.log(props.nftPixels.length);
+      let nftPixel: NftPixel;
+      let nftPixelName: string;
 
-      for (var i = 0; i < props.nftData.items.length; i++) {
-        const nft = props.nftData.items[i];
-        const name = nft.content.metadata.name;
-        try {
-          const x = name.split(".")[0];
-          const y = name.split(".")[1].split("-")[0];
-          const color = name.split(".")[1].split("-")[1];
-          props.nftPixels[x][y].x = x;
-          props.nftPixels[x][y].y = y;
-          props.nftPixels[x][y].color = color;
-          //console.log("name: " + name + "color " + props.nftPixels[x][y].color);
-          context.fillStyle = props.nftPixels[x][y].color;
-          context.fillRect(x, y, 1, 1);
-          if (x == pixelPosition.x && y == pixelPosition.y) {
-            setTooltip(nft.content.metadata.name);
-            setNftAddress(nft.ownership.owner);
-            hoverPixel = true;
+      var canvasWidth  = 1000;
+      var canvasHeight = 1000;
+      /*var imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
+      var buf = new ArrayBuffer(imageData.data.length);
+      var buf8 = new Uint8ClampedArray(buf);
+      var data = new Uint32Array(buf);*/
+
+      for (var x = 0; x < 1000; x++) {
+        for (var y = 0; y < 1000; y++) {
+          let pixel = props.nftPixels[x][y];
+
+          /*imageData.data[4 * (y * imageData.width + x)] = 255; // Rotwert
+          imageData.data[4 * (y * imageData.width + x) + 1] = 0; // Grünwert
+          imageData.data[4 * (y * imageData.width + x) + 2] = 0; // Blauwert
+          imageData.data[4 * (y * imageData.width + x) + 3] = 255; // Alphawert*/
+
+          if (pixel.c != "ffffffff") {
+            context.fillStyle = "#"+pixel.c;
+            context.fillRect(x, y, 1, 1);
+            if (x == pixelPosition.x && y == pixelPosition.y) {
+              nftPixel = pixel;
+              nftPixelName = x + "." + y + "-" + nftPixel.c;
+            }
           }
-        } catch (e) {
-          //console.log("error " + e);
         }
       }
+     // context.putImageData(imageData, 0, 0);
+
+      if (nftPixel) {
+        setTooltip(nftPixelName);
+        setNftAddress(nftPixel.o);
+        hoverPixel = true;
+      }
+      
+      console.log("Redraw canvas");
       setHoverPixel(hoverPixel);
 
       context.fillStyle = props.color;
       context.fillRect(pixelPosition.x , pixelPosition.y, 1, 1);
-
     }
   }, [
     props.canvasWidth,
@@ -227,8 +247,8 @@ export default function Canvas(props: CanvasProps) {
     scale,
     offset,
     //viewportTopLeft,
-    pixelPosition,
-    props.nftData,
+    pixelPosition.x,
+    pixelPosition.y,
     props.nftPixels,
   ]);
 
@@ -244,7 +264,7 @@ export default function Canvas(props: CanvasProps) {
 
       if (canvasRef.current) {
         const viewportMousePos = { x: event.clientX, y: event.clientY };
-        var BB= canvasRef.current.getBoundingClientRect();
+        var BB = canvasRef.current.getBoundingClientRect();
 
         const topLeftCanvasPos = {
           x: BB.left,
@@ -252,17 +272,23 @@ export default function Canvas(props: CanvasProps) {
         };
 
         const newLocal = diffPoints(viewportMousePos, topLeftCanvasPos);
-        let posOnConvasX = newLocal.x + (viewportTopLeft.x * scale);
-        let posOnConvasY = newLocal.y + (viewportTopLeft.y * scale);
+        let posOnCanvasX = newLocal.x + (viewportTopLeft.x * scale);
+        let posOnCanvasY = newLocal.y + (viewportTopLeft.y * scale);
 
-        //console.log("new local: " + newLocal.x + " " + newLocal.y)
-        //console.log("Canvas: x " + posOnConvasX + " y " + posOnConvasY)
-        //console.log("Scale " + scale)
-        //console.log("Pixel position: " + newLocal + " " + Math.floor( posOnConvasY / scale) )
-        const xPixel = Math.floor(posOnConvasX / scale);
-        const yPixel = Math.floor(posOnConvasY / scale);
+        const xPixel = Math.floor(posOnCanvasX / scale);
+        const yPixel = Math.floor(posOnCanvasY / scale);
+ 
+        console.log("page mouse pos: " + event.pageX + " " + event.pageY)
+        console.log("viewport top left: " + viewportTopLeft.x + " " + viewportTopLeft.y)
+        console.log("viewportMousePos: " + viewportMousePos.x + " " + viewportMousePos.y)
+        console.log("Local Position: " + newLocal.x + " " + newLocal.y)
+        console.log("PosOnCanvasX: x " + posOnCanvasX + " y " + posOnCanvasY)
+        console.log("Scale " + scale)
+        console.log("Pixel position: " + xPixel + " " + yPixel )
 
-        setPixelPosition({x: xPixel, y: yPixel});
+        if (pixelPosition.x != xPixel || pixelPosition.y != yPixel) {
+          setPixelPosition({x: xPixel, y: yPixel});
+        }        
 
         setMousePos(newLocal);
       }
@@ -274,7 +300,7 @@ export default function Canvas(props: CanvasProps) {
       canvasElem.removeEventListener("mousemove", handleUpdateMouse);
       canvasElem.removeEventListener("wheel", handleUpdateMouse);
     };
-  }, [offset, scale]);
+  }, [offset, scale, pixelPosition, mousePos, viewportTopLeft]);
 
   // add event listener on canvas for zoom
   useEffect(() => {
@@ -290,29 +316,29 @@ export default function Canvas(props: CanvasProps) {
       event.preventDefault();
       if (context) {
         let zoom = 1 - event.deltaY / ZOOM_SENSITIVITY;
-        let newLocal = scale * zoom;
+        let newScale = scale * zoom;
 
         // Limit zoom so that the canvas is always visible
-        if (newLocal > 30 || newLocal < 0.9) {
+        if (newScale > 10 || newScale < 0.8) {
           return;
         }
         const viewportTopLeftDelta = {
           x: (mousePos.x / scale) * (1 - 1 / zoom),
           y: (mousePos.y / scale) * (1 - 1 / zoom),
         };
+
         const newViewportTopLeft = addPoints(
           viewportTopLeft,
           viewportTopLeftDelta
         );
 
         context.translate(viewportTopLeft.x, viewportTopLeft.y);
-
         context.scale(zoom, zoom);
         context.translate(-newViewportTopLeft.x, -newViewportTopLeft.y);
 
         setViewportTopLeft(newViewportTopLeft);
         
-        setScale(newLocal);
+        setScale(newScale);
         isResetRef.current = false;
       }
     }

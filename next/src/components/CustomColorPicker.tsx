@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SketchPicker } from "react-color";
+import { SketchPicker, SwatchesPicker } from "react-color";
 
 interface Props {
   color: string;
@@ -29,8 +29,8 @@ export default function ColorPicker(props: Props) {
               className="fixed inset-0"
               onClick={() => setDisplayColorPicker(!displayColorPicker)}
             />
-            <SketchPicker
-            
+            <SwatchesPicker
+          
               color={color}
               onChange={(newColor) => handleChange(newColor)}
             />

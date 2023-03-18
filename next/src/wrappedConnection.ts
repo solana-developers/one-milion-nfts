@@ -95,6 +95,7 @@ export class WrappedConnection extends Connection {
       console.error(error);
     }
   }
+  
   async getAssetsByGroup(
     groupKey: string,
     groupValue: string,
@@ -105,15 +106,64 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
+      let events = [];
+
       const response = await axios.post(this.rpcEndpoint, {
         jsonrpc: "2.0",
         method: "get_assets_by_group",
         id: "rpd-op-123",
         params: [groupKey, groupValue, sortBy, limit, page, before, after],
       });
-      return response.data.result;
+      events.push(...response.data.result.items);
+
+      return events;
     } catch (error) {
       console.error(error);
     }
   }
+
+  async getAllAssetsByGroup(
+    groupKey: string,
+    groupValue: string,
+    sortBy: any,
+    limit: number,
+    page: number,
+    before: string,
+    after: string
+  ): Promise<any> {
+    try {
+      let events = [];
+      let response = await axios.post(this.rpcEndpoint, {
+        jsonrpc: "2.0",
+        method: "get_assets_by_group",
+        id: "rpd-op-123",
+        params: [groupKey, groupValue, sortBy, limit, page, before, after],
+      });
+      events.push(...response.data.result.items);
+      
+      while (true) {        
+        console.log("Requested page" + page);
+
+        page += 1;
+        response = await axios.post(this.rpcEndpoint, {
+          jsonrpc: "2.0",
+          method: "get_assets_by_group",
+          id: "rpd-op-123",
+          params: [groupKey, groupValue, sortBy, limit, page, before, after],
+        });
+
+        events.push(...response.data.result.items);
+        if (events.length % 1000 != 0 || response.data.result.items.length == 0) {
+          break;
+        }
+      }
+
+      return events;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
 }
+
+
