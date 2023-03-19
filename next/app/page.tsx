@@ -1,14 +1,8 @@
 "use client"; // this makes next know that this page should be rendered in the client
 import React, { useEffect, useState } from "react";
-import {
-  CONNECTION,
-  TreeAccount,
-} from "@/src/util/const";
+import { CONNECTION, TreeAccount } from "@/src/util/const";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import {
-  PublicKey,
-  Transaction,
-} from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
@@ -16,17 +10,15 @@ import { Grid } from "@/src/components/Grid";
 import LoadingSpinner from "@/src/components/LoadingSpinner";
 import { MyPixels } from "@/src/components/MyPixels";
 import Upload from "@/src/ShadowDrive/ShadowDriveUpload";
-import {
-  decompress,
-  redeemAsset,
-  transferAsset,
-} from "@/src/util/utils";
+import { decompress, redeemAsset, transferAsset } from "@/src/util/utils";
 import TransferAdressInput from "@/src/components/TransferAdressInput";
 import ColorPicker from "@/src/components/CustomColorPicker";
+import Pinch from "../src/components/Pinch";
+import { NftPixel } from "../src/components/Grid";
 
 export default function Home() {
   const [treeAccount, setTreeAccount] = useState<any>();
-  const [allNFTsOfCollection, setAllNFTsOfCollection] = useState<any>();
+  const [allNFTsOfCollection, setAllNFTsOfCollection] = useState<Array<Array<NftPixel>>>();
   const [myNFTs, setMyNFTs] = useState<any>();
   const { publicKey, sendTransaction } = useWallet();
   const [color, setColor] = React.useState<string>("");
@@ -112,7 +104,12 @@ export default function Home() {
     const currentBaseUrl = window.location.href;
     let result = await fetch(currentBaseUrl + "/api/nfts/");
     let data = await result.json();
-    setAllNFTsOfCollection(data);
+    console.log(data);
+    console.log(data.allNfts);
+    let nftGrid: Array<Array<NftPixel>> = JSON.parse(data.allNfts);
+    console.log(nftGrid);
+
+    setAllNFTsOfCollection(nftGrid);
   }
 
   // Get all pixels as soon as the page loads
@@ -179,8 +176,8 @@ export default function Home() {
           "&pubkey=" +
           publicKey.toBase58();
         // After the mint we inform the backend that the mint was successful to add it to the cache.
-        // Probably not the best way to do it. We could also mint in the backend, but I dont have that much sol. 
-        // Or use a helius webhook to listen to the tree and then update the cache. 
+        // Probably not the best way to do it. We could also mint in the backend, but I dont have that much sol.
+        // Or use a helius webhook to listen to the tree and then update the cache.
         const successResponse = await fetch(url);
 
         // After the mint refresh the list of collection NFTs
@@ -213,7 +210,9 @@ export default function Home() {
   }
 
   async function OnRedeemClicked(asset: string) {
-    alert("Redeem is not ready yet. Don't use it. Helius can not handle the redeemed leafs yet.");
+    alert(
+      "Redeem is not ready yet. Don't use it. Helius can not handle the redeemed leafs yet."
+    );
     return;
 
     if (!publicKey) {
@@ -230,7 +229,9 @@ export default function Home() {
   }
 
   async function OnDecompressClicked(asset: string, name: string) {
-    alert("You need to Redeem first and then Decompress. Helius can not handle the redeemed leafs yet.");
+    alert(
+      "You need to Redeem first and then Decompress. Helius can not handle the redeemed leafs yet."
+    );
     return;
 
     if (!publicKey) {
@@ -288,23 +289,26 @@ export default function Home() {
             onChangeComplete={colorSketchPickerOnOkHandle}
           />
         </div>
-        
+
         <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-white">
           Pick a color - Use mouse wheel to zoom
         </h2>
 
         <div className="card flex justify-content-center"></div>
+        {allNFTsOfCollection && (
+          <>
+            <Pinch
+              onClickCallback={OnGridItemClicked}
+              nftPixels={allNFTsOfCollection}
+              selectedColor={color}
+              canvasWidth={1000}
+              canvasHeight={1000}
+            ></Pinch>
+          </>
+        )}
 
         <div className="flex justify-center gap-0">
-          {allNFTsOfCollection && (
-            <>
-              <Grid
-                onClickCallback={OnGridItemClicked}
-                allNFTs={allNFTsOfCollection}
-                selectedColor={color}
-              ></Grid>
-            </>
-          )}
+          
           {myNFTs && (
             <>
               <MyPixels

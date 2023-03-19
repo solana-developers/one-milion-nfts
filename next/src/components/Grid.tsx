@@ -2,8 +2,11 @@
 import React, { FC, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { MyPixel } from "./MyPixels";
+import { useSpring,animated } from "@react-spring/core";
+import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 
 const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
+import styles from './styles.module.css'
 
 type Props = {
   children?: React.ReactNode;
@@ -22,62 +25,69 @@ export class NftPixel {
   }
 }
 
+const useGesture = createUseGesture([dragAction, pinchAction])
+
 export const Grid: FC<Props> = ({
   children,
   onClickCallback,
   allNFTs,
   selectedColor,
 }) => {
-  let nftGrid: Array<Array<NftPixel>> = JSON.parse(allNFTs.allNfts);
+  //let nftGrid: Array<Array<NftPixel>> = JSON.parse(allNFTs.allNfts);
 
- // console.log("nftGrid: " + JSON.stringify(nftGrid));
 
-  for (var i = 0; i < 1000; i++) {
-    for (var j = 0; j < 1000; j++) {
-      //console.log("nftGrid entry " + nftGrid[i][j]);
+  useEffect(() => {
+    const handler = (e: Event) => e.preventDefault()
+    document.addEventListener('gesturestart', handler)
+    document.addEventListener('gesturechange', handler)
+    document.addEventListener('gestureend', handler)
+    return () => {
+      document.removeEventListener('gesturestart', handler)
+      document.removeEventListener('gesturechange', handler)
+      document.removeEventListener('gestureend', handler)
     }
-  }
+  }, [])
 
-  //console.log("nftGrid: " + JSON.stringify(nftGrid));
-  /*var nftGrid = new Array<Array<NftPixel>>(1000);
+  const [style, api] = useSpring(() => ({
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotateZ: 0,
+  }))
+  const ref = React.useRef<HTMLDivElement>(null)
 
-  for (var i = 0; i < nftGrid.length; i++) {
-    nftGrid[i] = new Array<NftPixel>(1000);
-  }
+  useGesture(
+    {
+      // onHover: ({ active, event }) => console.log('hover', event, active),
+      // onMove: ({ event }) => console.log('move', event),
+      onDrag: ({ pinching, cancel, offset: [x, y], ...rest }) => {
+        if (pinching) return cancel()
+        api.start({ x, y })
+      },
+      onPinch: ({ origin: [ox, oy], first, movement: [ms], offset: [s, a], memo }) => {
+        if (first) {
+          const { width, height, x, y } = ref.current!.getBoundingClientRect()
+          const tx = ox - (x + width / 2)
+          const ty = oy - (y + height / 2)
+          memo = [style.x.get(), style.y.get(), tx, ty]
+        }
 
-  for (var i = 0; i < nftGrid.length; i++) {
-    var cube = nftGrid[i];
-    for (var j = 0; j < cube.length; j++) {
-      nftGrid[i][j] = new NftPixel();
+        const x = memo[0] - (ms - 1) * memo[2]
+        const y = memo[1] - (ms - 1) * memo[3]
+        api.start({ scale: s, rotateZ: a, x, y })
+        return memo
+      },
+    },
+    {
+      target: ref,
+      drag: { from: () => [style.x.get(), style.y.get()] },
+      pinch: { scaleBounds: { min: 0.5, max: 2 }, rubberband: true },
     }
-  }
-
-  for (var i = 0; i < allNFTs.length; i++) {
-    const nft = allNFTs[i];
-    const name = nft.content.metadata.name;
-    try {
-      const x = name.split(".")[0];
-      const y = name.split(".")[1].split("-")[0];
-      const color = name.split(".")[1].split("-")[1];
-      nftGrid[x][y].x = x;
-      nftGrid[x][y].y = y;
-      nftGrid[x][y].c = color;
-      //console.log("name: " + name + "color " + props.nftPixels[x][y].color);
-    } catch (e) {
-      //console.log("error " + e);
-    }
-  }*/
+  )
 
   return (
-    <div>
-      <Canvas
-        onClickCallback={onClickCallback}
-        color={selectedColor}
-        nftPixels={nftGrid}
-        canvasWidth={1000}
-        canvasHeight={1000}
-      ></Canvas>
-
+    <div className={`flex fill center ${styles.container}`}>
+   
     </div>
   );
 };

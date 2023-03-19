@@ -69,7 +69,6 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
       ""
     );
 
-    console.log(allAssetsOwned);
     var nftGrid = new Array<Array<NftPixel>>(1000);
 
     for (var i = 0; i < nftGrid.length; i++) {

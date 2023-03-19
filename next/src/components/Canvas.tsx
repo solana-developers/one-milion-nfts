@@ -8,6 +8,7 @@ import {
 } from "react";
 import * as React from "react";
 import { NftPixel } from "./Grid";
+import Pinch from "./Pinch";
 
 type CanvasProps = {
   canvasWidth: number;
@@ -260,6 +261,7 @@ export default function Canvas(props: CanvasProps) {
     }
 
     function handleUpdateMouse(event: MouseEvent) {
+      return;
       event.preventDefault();
 
       if (canvasRef.current) {
@@ -313,6 +315,7 @@ export default function Canvas(props: CanvasProps) {
     // the mouse doesn't move during scale - the 'zoom point' of the mouse
     // before and after zoom is relatively the same position on the viewport
     function handleWheel(event: WheelEvent) {
+      return;
       event.preventDefault();
       if (context) {
         let zoom = 1 - event.deltaY / ZOOM_SENSITIVITY;
