@@ -23,6 +23,8 @@ import {
 } from "@/src/util/utils";
 import TransferAdressInput from "@/src/components/TransferAdressInput";
 import ColorPicker from "@/src/components/CustomColorPicker";
+import { NftPixel } from "../src/components/Grid";
+import { MyPixel } from "../src/components/MyPixels";
 
 export default function Home() {
   const [treeAccount, setTreeAccount] = useState<any>();
@@ -32,7 +34,7 @@ export default function Home() {
   const [color, setColor] = React.useState<string>("");
   const [loading, setLoading] = React.useState(false);
   const [transferInProgress, setTransferInProgress] = React.useState(false);
-  const [selectedAsset, setSelectedAsset] = React.useState("");
+  const [selectedAsset, setSelectedAsset] = React.useState<MyPixel>();
 
   const colorSketchPickerOnOkHandle = (color: string) => {
     //console.log("Color picker: " + color);
@@ -47,12 +49,13 @@ export default function Home() {
     if (!publicKey) {
       return;
     }
+    setLoading(true);
     try {
       console.log(
         "transfer to: " +
           address +
           " asset: " +
-          selectedAsset +
+          selectedAsset?.id +
           " from: " +
           publicKey.toBase58()
       );
@@ -60,19 +63,32 @@ export default function Home() {
         CONNECTION,
         publicKey,
         new PublicKey(address),
-        selectedAsset
+        selectedAsset?.id
       );
       const signature = await sendTransaction(transaction, CONNECTION, {
         skipPreflight: true,
       });
       console.log("signature: " + signature);
       await CONNECTION.confirmTransaction(signature, "confirmed");
-      console.log(address);
+    
+      const currentBaseUrl = window.location.href;
+      let url =
+          currentBaseUrl +
+          "/api/transferSuccess?x=" +
+          selectedAsset?.x  +
+          "&y=" +
+          selectedAsset?.y +
+          "&pubkey=" + address;
+        // After the mint we inform the backend that the transfer was successful to add it to the cache.
+        await fetch(url);
+        setLoading(false);
     } catch (error) {
       console.log(error);
       setTransferInProgress(false);
+      setLoading(false);
     }
     getAssetsByOwner(publicKey);
+    getCachedNftsFromAPI();
     setTransferInProgress(false);
   };
 
@@ -112,13 +128,16 @@ export default function Home() {
     const currentBaseUrl = window.location.href;
     let result = await fetch(currentBaseUrl + "/api/nfts/");
     let data = await result.json();
-    setAllNFTsOfCollection(data);
+        
+    setLoading(true);
+    setAllNFTsOfCollection(data);      
+    setLoading(false);
   }
 
   // Get all pixels as soon as the page loads
   useEffect(() => {
     getMerkelTreeInfo();
-    // This will be too slow for the whole collection so we cache the pixels in the backend and get them via API
+    // This will be too slow for the whole collection since you can only get 1000 at a time so we cache the pixels in the backend and get them via API
     // getAssetsByGroup(CollectionMint.toBase58());
     getCachedNftsFromAPI();
     console.log("Request nfts");
@@ -129,6 +148,7 @@ export default function Home() {
     if (publicKey == undefined) {
       return;
     }
+    setMyNFTs(undefined);
     getAssetsByOwner(publicKey);
   }, [publicKey]);
 
@@ -181,7 +201,7 @@ export default function Home() {
         // After the mint we inform the backend that the mint was successful to add it to the cache.
         // Probably not the best way to do it. We could also mint in the backend, but I dont have that much sol. 
         // Or use a helius webhook to listen to the tree and then update the cache. 
-        const successResponse = await fetch(url);
+        await fetch(url);
 
         // After the mint refresh the list of collection NFTs
         //await getAssetsByGroup(CollectionMint.toBase58());
@@ -194,7 +214,6 @@ export default function Home() {
     };
 
     await getPartialSignedTransactionFromApiAndSign();
-
     setLoading(false);
   };
 
@@ -215,7 +234,7 @@ export default function Home() {
   async function OnRedeemClicked(asset: string) {
     alert("Redeem is not ready yet. Don't use it. Helius can not handle the redeemed leafs yet.");
     return;
-
+/*
     if (!publicKey) {
       alert("Please connect wallet to decompress your nft.");
       return;
@@ -226,13 +245,13 @@ export default function Home() {
       skipPreflight: true,
     });
     console.log("signature: " + signature);
-    await CONNECTION.confirmTransaction(signature, "confirmed");
+    await CONNECTION.confirmTransaction(signature, "confirmed");*/
   }
 
   async function OnDecompressClicked(asset: string, name: string) {
     alert("You need to Redeem first and then Decompress. Helius can not handle the redeemed leafs yet.");
     return;
-
+/*
     if (!publicKey) {
       alert("Please connect wallet to decompress your nft.");
       return;
@@ -243,15 +262,15 @@ export default function Home() {
       skipPreflight: true,
     });
     console.log("signature: " + signature);
-    await CONNECTION.confirmTransaction(signature, "confirmed");
+    await CONNECTION.confirmTransaction(signature, "confirmed");*/
   }
 
-  async function OnTransferClicked(asset: string) {
+  async function OnTransferClicked(nftPixel: MyPixel) {
     if (!publicKey) {
       alert("Please connect wallet to transfer your NFT.");
       return;
     }
-    setSelectedAsset(asset);
+    setSelectedAsset(nftPixel);
     setTransferInProgress(true);
   }
 
@@ -270,12 +289,18 @@ export default function Home() {
           <TransferAdressInput
             onCancelCallback={onTransferCancel}
             onTransferCallback={onTransferSubmit}
-            assetId={selectedAsset}
+            assetId={selectedAsset?.id}
+            nftPixel={selectedAsset}
           />
         </div>
       )}
 
-      <div className="absolute ...">{treeAccount && <WalletMultiButton />}</div>
+      <div className="absolute ...">{treeAccount && <WalletMultiButton />}
+        {treeAccount && (<p className="absolute left-6 text-sky-400/100  ">
+          Pixels Minted: {treeAccount.tree.sequenceNumber.toString()}
+        </p>)}
+      </div>
+
 
       <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-slate-900 bg-opacity-70 pt-4">
         <h1 className="mt-0 mb-2 text-5xl font-medium leading-tight text-primary text-center text-white">
@@ -292,9 +317,22 @@ export default function Home() {
         <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-white">
           Pick a color - Use mouse wheel to zoom
         </h2>
+        {myNFTs && (myNFTs.items.length > 0) && (
+            <>
+              <div className="flex flex-col justify-center items-center">
+                <p className="text-sky-400/100 text-center text-center">
+                  Your Pixels
+                </p>
+              </div>
 
-        <div className="card flex justify-content-center"></div>
-
+              <MyPixels
+                onRedeemCallback={OnRedeemClicked}
+                onDecompressCallback={OnDecompressClicked}
+                onTransferCallback={OnTransferClicked}
+                allNFTs={myNFTs}
+              ></MyPixels>
+            </>
+          )}
         <div className="flex justify-center gap-0">
           {allNFTsOfCollection && (
             <>
@@ -305,21 +343,12 @@ export default function Home() {
               ></Grid>
             </>
           )}
-          {myNFTs && (
-            <>
-              <MyPixels
-                onRedeemCallback={OnRedeemClicked}
-                onDecompressCallback={OnDecompressClicked}
-                onTransferCallback={OnTransferClicked}
-                allNFTs={myNFTs}
-              ></MyPixels>
-            </>
-          )}
         </div>
 
         {/* These are some debug buttons for getting data */}
         <div className="flex-col justify-center">
-          {publicKey && (
+          { /* Some buttons to interact with the merkle tree
+          publicKey && (
             <>
               <button
                 onClick={() => {
@@ -354,10 +383,11 @@ export default function Home() {
                 getCachedNftsFromAPI
               </button>
             </>
-          )}
+              )*/}
         </div>
 
-        {treeAccount && (
+        {/* Some merkle tree stats
+          treeAccount && (
           <>
             <ul className="list-disc">
               <li className="text-sky-400/100"> Merkle tree info</li>
@@ -384,7 +414,7 @@ export default function Home() {
               </li>
             </ul>
           </>
-        )}
+                )*/}
       </div>
     </div>
   );

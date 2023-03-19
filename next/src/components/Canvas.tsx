@@ -47,7 +47,7 @@ export default function Canvas(props: CanvasProps) {
   const [scale, setScale] = useState<number>(1);
   const [offset, setOffset] = useState<Point>(ORIGIN);
   const [mousePos, setMousePos] = useState<Point>(ORIGIN);
-  const [pixelPosition, setPixelPosition] = useState<Point>(ORIGIN);
+  const [pixelPosition, setPixelPosition] = useState<Point>({ x: -1, y: -1 });
   const [viewportTopLeft, setViewportTopLeft] = useState<Point>(ORIGIN);
   const [mouseDownPosition, setMouseDownPosition] = useState<Point>(ORIGIN);
   const isResetRef = useRef<boolean>(false);
@@ -79,40 +79,8 @@ export default function Canvas(props: CanvasProps) {
         setViewportTopLeft(ORIGIN);
         lastOffsetRef.current = ORIGIN;
         lastMousePosRef.current = ORIGIN;
-
         // this thing is so multiple resets in a row don't clear canvas
         isResetRef.current = true;
-        const newPoint = {x: 0, y: 0};
-
-        /*setScale(10);
-
-        setOffset(newPoint);
-        setMousePos(newPoint);
-        setViewportTopLeft(newPoint);
-        lastOffsetRef.current = newPoint;
-        lastMousePosRef.current = newPoint;
-
-        let zoom = 10;
-        let newLocal = scale * zoom;
-
-        const viewportTopLeftDelta = {
-          x: (mousePos.x / scale) * (1 - 1 / zoom),
-          y: (mousePos.y / scale) * (1 - 1 / zoom),
-        };
-        const newViewportTopLeft = addPoints(
-          viewportTopLeft,
-          viewportTopLeftDelta
-        );
-
-        context.translate(viewportTopLeft.x, viewportTopLeft.y);
-
-        context.scale(zoom, zoom);
-        context.translate(-newViewportTopLeft.x, -newViewportTopLeft.y);
-
-        setViewportTopLeft(newViewportTopLeft);
-        
-        setScale(newLocal);
-        isResetRef.current = false;*/
       }
     },
     [props.canvasWidth, props.canvasHeight]
@@ -156,6 +124,11 @@ export default function Canvas(props: CanvasProps) {
           window.alert("You clicked on a pixel that is already minted!");
           return;
         }
+        if (scale < 3) {
+          console.log("scale", scale);
+          window.alert("Better zoom in a bit to see where you draw!");
+          return;
+        }
         props.onClickCallback(pixelPosition.x, pixelPosition.y);
       }
     },
@@ -189,32 +162,22 @@ export default function Canvas(props: CanvasProps) {
 
   // draw
   useLayoutEffect(() => {
+            setHoverPixel(false);
+
     if (context) {
       if (!context) return;
       context.fillStyle = "white";
       // Need to clean a bit more since we will be able to move the canvas
       context.clearRect(-6000, -6000, 12000, 12000);
-      context.fillRect(0, 0, 1000, 1000);
-      let hoverPixel = false;
-      //console.log(props.nftPixels.length);
-      let nftPixel: NftPixel;
-      let nftPixelName: string;
+      context.fillRect(0, 0, props.canvasWidth, props.canvasHeight);
+      let newHoverPixel = false;
 
-      var canvasWidth  = 1000;
-      var canvasHeight = 1000;
-      /*var imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
-      var buf = new ArrayBuffer(imageData.data.length);
-      var buf8 = new Uint8ClampedArray(buf);
-      var data = new Uint32Array(buf);*/
+      let nftPixel: NftPixel | undefined;
+      let nftPixelName: string | undefined;
 
       for (var x = 0; x < 1000; x++) {
         for (var y = 0; y < 1000; y++) {
           let pixel = props.nftPixels[x][y];
-
-          /*imageData.data[4 * (y * imageData.width + x)] = 255; // Rotwert
-          imageData.data[4 * (y * imageData.width + x) + 1] = 0; // Grünwert
-          imageData.data[4 * (y * imageData.width + x) + 2] = 0; // Blauwert
-          imageData.data[4 * (y * imageData.width + x) + 3] = 255; // Alphawert*/
 
           if (pixel.c != "ffffffff") {
             context.fillStyle = "#"+pixel.c;
@@ -226,17 +189,16 @@ export default function Canvas(props: CanvasProps) {
           }
         }
       }
-     // context.putImageData(imageData, 0, 0);
 
-      if (nftPixel) {
-        setTooltip(nftPixelName);
+      if (nftPixel && nftPixelName) {
+        setTooltip("Position-Color: "+ nftPixelName);
         setNftAddress(nftPixel.o);
-        hoverPixel = true;
+        newHoverPixel = true;
       }
       
-      console.log("Redraw canvas");
-      setHoverPixel(hoverPixel);
-
+      console.log("Redraw canvas " + newHoverPixel);
+      setHoverPixel(newHoverPixel);
+       
       context.fillStyle = props.color;
       context.fillRect(pixelPosition.x , pixelPosition.y, 1, 1);
     }
@@ -246,10 +208,9 @@ export default function Canvas(props: CanvasProps) {
     context,
     scale,
     offset,
-    //viewportTopLeft,
     pixelPosition.x,
     pixelPosition.y,
-    props.nftPixels,
+    props.nftPixels
   ]);
 
   // add event listener on canvas for mouse position
@@ -264,11 +225,12 @@ export default function Canvas(props: CanvasProps) {
 
       if (canvasRef.current) {
         const viewportMousePos = { x: event.clientX, y: event.clientY };
-        var BB = canvasRef.current.getBoundingClientRect();
+        // For the pixel that will be drawn we need to local position on the canvas
+        var canvasBoundingBox = canvasRef.current.getBoundingClientRect();
 
         const topLeftCanvasPos = {
-          x: BB.left,
-          y: BB.top,
+          x: canvasBoundingBox.left,
+          y: canvasBoundingBox.top,
         };
 
         const newLocal = diffPoints(viewportMousePos, topLeftCanvasPos);
@@ -277,14 +239,6 @@ export default function Canvas(props: CanvasProps) {
 
         const xPixel = Math.floor(posOnCanvasX / scale);
         const yPixel = Math.floor(posOnCanvasY / scale);
- 
-        console.log("page mouse pos: " + event.pageX + " " + event.pageY)
-        console.log("viewport top left: " + viewportTopLeft.x + " " + viewportTopLeft.y)
-        console.log("viewportMousePos: " + viewportMousePos.x + " " + viewportMousePos.y)
-        console.log("Local Position: " + newLocal.x + " " + newLocal.y)
-        console.log("PosOnCanvasX: x " + posOnCanvasX + " y " + posOnCanvasY)
-        console.log("Scale " + scale)
-        console.log("Pixel position: " + xPixel + " " + yPixel )
 
         if (pixelPosition.x != xPixel || pixelPosition.y != yPixel) {
           setPixelPosition({x: xPixel, y: yPixel});
@@ -293,11 +247,21 @@ export default function Canvas(props: CanvasProps) {
         setMousePos(newLocal);
       }
     }
+    
+    function handleMouseOut(event: MouseEvent) {
+      // On mouse out we need to reset the hoveredPixel because otherwise the canvas would draw on top of color picker
+      event.preventDefault();
+      setHoverPixel(false);
+      console.log("Mouse out");
+      setPixelPosition({x: -1, y: -1});
+    }
 
     canvasElem.addEventListener("mousemove", handleUpdateMouse);
+    canvasElem.addEventListener("mouseout", handleMouseOut);
     canvasElem.addEventListener("wheel", handleUpdateMouse);
     return () => {
       canvasElem.removeEventListener("mousemove", handleUpdateMouse);
+      canvasElem.removeEventListener("mouseout", handleMouseOut);
       canvasElem.removeEventListener("wheel", handleUpdateMouse);
     };
   }, [offset, scale, pixelPosition, mousePos, viewportTopLeft]);
@@ -347,19 +311,14 @@ export default function Canvas(props: CanvasProps) {
     return () => canvasElem.removeEventListener("wheel", handleWheel);
   }, [context, mousePos.x, mousePos.y, viewportTopLeft, scale]);
 
-  return (
+  return ( 
     <div className={"group flex "+ (hoverPixel ? "relative" : "")}>
-      {hoverPixel &&  <span className="group-hover:opacity-100 transition-opacity bg-gray-800 px-1 text-sm text-gray-100 rounded-md absolute left-1/2 
-    -translate-x-1/2 translate-y-full opacity-0 m-4 mx-auto">
-      {tooltip} <br></br>
-      {nftAddress}
-      </span>
-    }
-      {/*<button className="text-white" onClick={() => context && reset(context)}>Reset</button>
-      <pre>scale: {scale}</pre>
-      <pre>offset: {JSON.stringify(offset)}</pre>
-      <pre>viewportTopLeft: {JSON.stringify(viewportTopLeft)}</pre>
-      <pre>pixel position: {JSON.stringify(pixelPosition)}</pre>*/}
+      {hoverPixel &&  
+        <span className="group-hover:opacity-100 transition-opacity bg-gray-800 px-1 text-sm text-gray-100 rounded-md absolute opacity-0  mx-auto">
+          {tooltip} <br></br>
+          {nftAddress}
+        </span>
+      }
       <canvas 
         onMouseDown={startPan}     
         onClick={handleClick}   

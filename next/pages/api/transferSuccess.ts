@@ -54,24 +54,12 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const x = Number.parseInt(xString);
   const yString = getFromPayload(req, 'Query', 'y');
   const y = Number.parseInt(yString);
-  const colorString = getFromPayload(req, 'Query', 'color');
-  const color = colorString;
-  if (!isColor(color)) {
-    res.status(400).json({
-      message: "Invalid color",
-    });
-    return;
-  }
   const pubkey = getFromPayload(req, 'Query', 'pubkey');
 
-  console.log("color " + color);
-  const noHashTagColor = color.replace("#", "");
-
   let parsedNfts: Array<Array<NftPixel>> = JSON.parse(globalCache.get("allNfts") as string);
-  parsedNfts[x][y].c = noHashTagColor;
   parsedNfts[x][y].o = pubkey;
   globalCache.set("allNfts", JSON.stringify(parsedNfts));
-  console.log("added color to cache: #" + parsedNfts[x][y].c + " to " + x + " " + y + " for " + pubkey);
+  console.log("Changed owner: " + parsedNfts[x][y].c + " to " + x + " " + y + " to " + pubkey);
 
   res.status(200).json({
     message: "OK",

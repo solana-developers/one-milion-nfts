@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { MyPixel } from "./MyPixels";
 
 type Props = {
   children?: React.ReactNode;
-  onTransferCallback: (target: string) => void;
+  onTransferCallback: (target: string, nftPixel: MyPixel) => void;
   onCancelCallback: () => void;
-  assetId: string;
+  assetId: string | undefined;
+  nftPixel: MyPixel | undefined;
 };
 
 export default function TransferAdressInput(props: Props) {
@@ -26,7 +28,7 @@ export default function TransferAdressInput(props: Props) {
       <button onClick={() => props.onCancelCallback()} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Cancel
       </button>
-      <button onClick={() => props.onTransferCallback(value)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      <button onClick={() => props.onTransferCallback(value, props.nftPixel)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Transfer
       </button>
       </div>

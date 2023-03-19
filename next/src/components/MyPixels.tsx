@@ -1,9 +1,10 @@
 import React, { FC } from "react";
+import { NftPixel } from "./Grid";
 import SinglePixelCanvas from "./SinglePixelCanvas";
 
 type Props = {
   children?: React.ReactNode;
-  onTransferCallback: (asset: string) => void;
+  onTransferCallback: (nftPixel: MyPixel) => void;
   onRedeemCallback: (asset: string) => void;
   onDecompressCallback: (asset: string, name: string) => void;
   allNFTs: any;
@@ -52,11 +53,12 @@ export const MyPixels: FC<Props> = ({ onRedeemCallback, onDecompressCallback, on
 
   return (
     <div>
-      <h1 className="text-sky-400 text-3xl font-bold">My Pixel NFTs</h1>
-      <div className={"grid gap-5 grid-cols-1 overflow-y-auto h-96 ..."}>
+      
+      <div className={"flex flex-row space-x-5 overflow-x-auto self-end place-items-center justify-center ... "}>
         {myParsedPixels.map((nft: MyPixel) => (
-          <div key={nft.id}>
-            <p className="text-sky-400">{"Name: " + nft.name}</p>
+          <div key={nft.id} >
+            <p className="text-sky-400 truncate ...">{nft.name}</p>
+            <div className="flex flex-row place-items-center ...">
             <SinglePixelCanvas
               color={nft.color}
               canvasWidth={40}
@@ -81,13 +83,15 @@ export const MyPixels: FC<Props> = ({ onRedeemCallback, onDecompressCallback, on
                 </button>
             */ }
             <button
-              onClick={() => onTransferCallback(nft.id)}
+              onClick={() => onTransferCallback(nft)}
               className={
-                "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                "bg-blue-500 hover:bg-blue-700 text-white h-10 font-bold py-2 px-1 rounded"
               }
             >
               Transfer
             </button>
+            
+            </div>
           </div>
         ))}
       </div>

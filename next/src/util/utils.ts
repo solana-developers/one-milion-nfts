@@ -392,7 +392,7 @@ export const transferAsset = async (
   connectionWrapper: WrappedConnection,
   owner: PublicKey,
   newOwner: PublicKey,
-  assetId: string
+  assetId: string | undefined
 ) => {
   console.log(
     `Transfering asset ${assetId} from ${owner.toBase58()} to ${newOwner.toBase58()}. 
