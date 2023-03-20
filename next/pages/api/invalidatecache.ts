@@ -44,7 +44,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
 
   const client = createClient({ url: process.env.REDIS_URL??"" });
 
-  client.on("error", (error) => console.error(`Ups : ${error}`));
+  client.on("error", (error) => console.error(`Ups inv: ${error}`));
   await client.connect();
 
   const sortBy = {
@@ -118,7 +118,8 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   megaBytes = kiloBytes / 1024;
   console.log("megabytes compressed: " + megaBytes);
   //console.log("data compressed: " + Buffer.from(JSON.stringify(nftGrid)).toString('base64'));
-
+  client.quit();
+  
   res.status(200).json({
     allNfts: JSON.stringify(nftGrid), 
   });

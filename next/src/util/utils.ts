@@ -150,15 +150,15 @@ export const initCollection = async (
     {
       createMetadataAccountArgsV3: {
         data: {
-          name: "Many NFT",
+          name: "One Million NFTs",
           symbol: "ONEM",
-          uri: "https://metadata.y00ts.com/y/collection.json",
+          uri: "https://shdw-drive.genesysgo.net/QZNGUVnJgkw6sGQddwZVZkhyUWSUXAjXF9HQAjiVZ55/collection.json",
           sellerFeeBasisPoints: 100,
           creators: null,
           collection: null,
           uses: null,
         },
-        isMutable: false,
+        isMutable: true,
         collectionDetails: null,
       },
     }
@@ -319,6 +319,7 @@ export const mintCompressedNft = async (
       }),
     }
   );
+
   const tx = new Transaction().add(mintIx);
   tx.feePayer = feepayer;
   
@@ -454,6 +455,7 @@ export const transferAsset = async (
   console.log("Is valid: " + isValide);
 
   let canopyHeight = mkAccount.getCanopyDepth();
+  console.log("canopyHeight: " + canopyHeight);
 
   let slicedProofPath = proofPath.slice(
     0,
@@ -589,7 +591,7 @@ export const decompress = async (
     collection: collection,
     primarySaleHappened: false,
     sellerFeeBasisPoints: 0,
-    isMutable: false,
+    isMutable: true,
   };
 
   // Voucher: 9B4QxTpv8H4Uod369ykQpg5v3XbtRWqGpjhZTBz278WB

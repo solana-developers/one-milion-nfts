@@ -112,8 +112,8 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     uses: null,
     collection: collection,
     primarySaleHappened: false,
-    sellerFeeBasisPoints: 0,
-    isMutable: false,
+    sellerFeeBasisPoints: 420,
+    isMutable: true,
   };
   const hash = await CONNECTION.getLatestBlockhash();
 
@@ -123,7 +123,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     ownerWallet.publicKey,
     TreeAccount,
     CollectionMint,
-    collectionMetadataAccount,
+    collectionMetadataAccount, 
     collectionMasterEditionAccount,
     feepayer
   );

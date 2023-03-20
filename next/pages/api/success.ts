@@ -65,7 +65,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   }
   const client = createClient({ url: process.env.REDIS_URL??"" });
 
-  client.on("error", (error) => console.error(`Ups : ${error}`));
+  client.on("error", (error) => console.error(`Ups s: ${error}`));
   await client.connect();
 
   const pubkey = getFromPayload(req, 'Query', 'pubkey');
@@ -75,6 +75,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
 
   const cachedResult = await client.get("allNfts");
   if (cachedResult === null) {
+    client.quit();
     res.status(500).json({
       message: "Cache is empty",
     });
@@ -90,7 +91,8 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const compressed = await gzip(JSON.stringify(parsedNfts))
   const compressedBase64 = Buffer.from(compressed).toString('base64'); 
   const result = await client.set("allNfts", compressedBase64);
-
+  client.quit();
+  
   console.log(result);
   
   console.log("added color to cache: #" + parsedNfts[x][y].c + " to " + x + " " + y + " for " + pubkey);

@@ -42,11 +42,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const client = createClient({ url: process.env.REDIS_URL??"" });
 
-  client.on("error", (error) => console.error(`Ups : ${error}`));
+  client.on("error", (error) => {
+    client.quit();
+    console.error(`Ups nfts: ${error}`);
+    res.status(500).json({
+      allNfts: "rate limit redis",
+    });
+  });
   await client.connect();
 
   const cachedResult = await client.get("allNfts");
-
+  client.quit();
   if (!cachedResult) {
     res.status(200).json({
       allNfts: cachedResult?.toString() || "[]",
@@ -54,8 +60,12 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     return;
   }
 
-  let base64Buffer = new Buffer(cachedResult, 'base64');
-  const unzippedData = await ungzip(base64Buffer)
+  /*
+  To track the size of the cached result, the maximum is 4mb 1 million nfts in gziped json are 0.41mb \o/ 
+  const size = new TextEncoder().encode(cachedResult).length
+  const kiloBytes = size / 1024;
+  const megaBytes = kiloBytes / 1024;
+  console.log("megabytes compressed: " + megaBytes);*/
 
   res.status(200).json({
     allNfts: cachedResult,

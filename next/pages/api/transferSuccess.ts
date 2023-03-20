@@ -60,11 +60,12 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
 
   const client = createClient({ url: process.env.REDIS_URL??"" });
 
-  client.on("error", (error) => console.error(`Ups : ${error}`));
+  client.on("error", (error) => console.error(`Ups ts: ${error}`));
   await client.connect();
 
   const cachedResult = await client.get("allNfts");
   if (cachedResult === null) {
+    client.quit();
     res.status(500).json({
       message: "Cache is empty",
     });
@@ -79,8 +80,8 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const compressed = await gzip(JSON.stringify(parsedNfts))
   const compressedBase64 = Buffer.from(compressed).toString('base64'); 
   const result = await client.set("allNfts", compressedBase64);
-
-  console.log("Changed owner: " + parsedNfts[x][y].c + " to " + x + " " + y + " to " + pubkey);
+  client.quit();
+  console.log("Changed owner of " + parsedNfts[x][y].c + " " + x + " " + y + " to " + pubkey);
 
   res.status(200).json({
     message: "OK",

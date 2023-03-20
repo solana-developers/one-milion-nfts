@@ -50,6 +50,7 @@ export default function Home() {
     if (!publicKey) {
       return;
     }
+    setTransferInProgress(false);
     setLoading(true);
     try {
       console.log(
@@ -134,7 +135,6 @@ export default function Home() {
     const unzippedData = await ungzip(base64Buffer)
     console.log(unzippedData);
 
-        
     setLoading(true);
     setAllNFTsOfCollection(unzippedData.toString());      
     setLoading(false);
@@ -213,6 +213,8 @@ export default function Home() {
         //await getAssetsByGroup(CollectionMint.toBase58());
         await getAssetsByOwner(publicKey);
         await getCachedNftsFromAPI();
+        await getMerkelTreeInfo();
+
       } catch (error) {
         console.log(error);
         setLoading(false);
@@ -309,10 +311,14 @@ export default function Home() {
 
 
       <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-slate-900 bg-opacity-70 pt-4">
-        <h1 className="mt-0 mb-2 text-5xl font-medium leading-tight text-primary text-center text-white">
+        <h1 className=" font-sans mt-0 mb-2 text-5xl font-medium leading-tight text-primary text-center text-fuchsia-200">
           The One Million NFT Page
         </h1>
 
+        <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-fuchsia-50">
+          Pick a color - Use mouse wheel to zoom
+        </h2>
+       
         <div className="flex justify-center gap-0">
           <ColorPicker
             color={color}
@@ -320,9 +326,18 @@ export default function Home() {
           />
         </div>
         
-        <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-white">
-          Pick a color - Use mouse wheel to zoom
-        </h2>
+
+        <div className="flex justify-center gap-0">
+          {allNFTsOfCollection && (
+            <>
+              <Grid
+                onClickCallback={OnGridItemClicked}
+                allNFTs={allNFTsOfCollection}
+                selectedColor={color}
+              ></Grid>
+            </>
+          )}
+        </div>
         {myNFTs && (myNFTs.items.length > 0) && (
             <>
               <div className="flex flex-col justify-center items-center">
@@ -339,18 +354,6 @@ export default function Home() {
               ></MyPixels>
             </>
           )}
-        <div className="flex justify-center gap-0">
-          {allNFTsOfCollection && (
-            <>
-              <Grid
-                onClickCallback={OnGridItemClicked}
-                allNFTs={allNFTsOfCollection}
-                selectedColor={color}
-              ></Grid>
-            </>
-          )}
-        </div>
-
         {/* These are some debug buttons for getting data */}
         <div className="flex-col justify-center">
           { /* Some buttons to interact with the merkle tree

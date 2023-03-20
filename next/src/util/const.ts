@@ -11,10 +11,16 @@ export const CONNECTION = new WrappedConnection(process.env.NEXT_PUBLIC_RPC ? pr
     commitment: 'confirmed' 
   });
 
-  export const CollectionMint = new PublicKey("5o6eT9hrLLdzwNWo5cH784AtrqR18mPaY5kDoQbktHtd");
-  export const TreeAccount = new PublicKey("tr3dw6VYYnjcmj1rTNNnajGyRWYnQK9sQgbFErPwrk7");
+  export const CollectionMint = new PublicKey("7gZEKGK9V7iFRF79F3otjBp7jMuejMLirvovcgNofAhX");
+  export const TreeAccount = new PublicKey("tr4YwToCp79vnapocnujb6KbZpcbcRKdntBqgFW459P");
 
-  export const collectionMetadataAccount = new PublicKey("ASqNRbZhV8NMf6nMZCsHK8su3UpfUTYxv6P7ZwvVt1GQ");
-  export const collectionMasterEditionAccount = new PublicKey("2nJeMELovCrDEm4S4KArKcHkc2X5PtF3wgjuutmAEUVK");
+  export const collectionMetadataAccount = new PublicKey("HqAYQfkyMKDG5h4kUTaWCh45AYRHF95KHstYhgcf4Dy7");
+  export const collectionMasterEditionAccount = new PublicKey("2jF5C8yErRtp52CgYY9YpuaYLQkS3gQ5UHWATUZzQxj3");
 
+  /*
+    ===Collection Details===
+    Mint account: 7gZEKGK9V7iFRF79F3otjBp7jMuejMLirvovcgNofAhX
+    Metadata account: HqAYQfkyMKDG5h4kUTaWCh45AYRHF95KHstYhgcf4Dy7
+    Master edition account: 2jF5C8yErRtp52CgYY9YpuaYLQkS3gQ5UHWATUZzQxj3
+  */
 
