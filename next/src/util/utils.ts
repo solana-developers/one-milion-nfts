@@ -400,7 +400,7 @@ export const transferAsset = async (
   );
 
   let assetProof = await connectionWrapper.getAssetProof(assetId);
-  console.log("assetProof: " + assetProof);
+  console.log("assetProof: " + JSON.stringify(assetProof));
 
   if (!assetProof?.proof || assetProof.proof.length === 0) {
     throw new Error("Proof is empty");

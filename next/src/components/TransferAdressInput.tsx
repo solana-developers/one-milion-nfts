@@ -3,7 +3,7 @@ import { MyPixel } from "./MyPixels";
 
 type Props = {
   children?: React.ReactNode;
-  onTransferCallback: (target: string, nftPixel: MyPixel) => void;
+  onTransferCallback: (target: string, nftPixel: MyPixel | undefined) => void;
   onCancelCallback: () => void;
   assetId: string | undefined;
   nftPixel: MyPixel | undefined;
