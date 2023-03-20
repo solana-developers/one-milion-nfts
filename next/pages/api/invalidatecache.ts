@@ -119,9 +119,9 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   console.log("megabytes compressed: " + megaBytes);
   //console.log("data compressed: " + Buffer.from(JSON.stringify(nftGrid)).toString('base64'));
   client.quit();
-  
+
   res.status(200).json({
-    allNfts: JSON.stringify(nftGrid), 
+    allNfts: compressedBase64, 
   });
 };
 
