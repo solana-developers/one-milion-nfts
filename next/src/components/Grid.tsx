@@ -28,7 +28,7 @@ export const Grid: FC<Props> = ({
   allNFTs,
   selectedColor,
 }) => {
-  let nftGrid: Array<Array<NftPixel>> = JSON.parse(allNFTs.allNfts);
+  let nftGrid: Array<Array<NftPixel>> = JSON.parse(allNFTs);
 
  // console.log("nftGrid: " + JSON.stringify(nftGrid));
 

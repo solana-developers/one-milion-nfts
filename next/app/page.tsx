@@ -10,6 +10,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
+const {gzip, ungzip} = require('node-gzip');
 
 import { ConcurrentMerkleTreeAccount } from "@solana/spl-account-compression";
 import { Grid } from "@/src/components/Grid";
@@ -128,9 +129,14 @@ export default function Home() {
     const currentBaseUrl = window.location.href;
     let result = await fetch(currentBaseUrl + "/api/nfts/");
     let data = await result.json();
+    console.log(data);
+    let base64Buffer = new Buffer(data.allNfts, 'base64');
+    const unzippedData = await ungzip(base64Buffer)
+    console.log(unzippedData);
+
         
     setLoading(true);
-    setAllNFTsOfCollection(data);      
+    setAllNFTsOfCollection(unzippedData.toString());      
     setLoading(false);
   }
 

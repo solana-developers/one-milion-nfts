@@ -58,7 +58,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const unzippedData = await ungzip(base64Buffer)
 
   res.status(200).json({
-    allNfts: unzippedData.toString(),
+    allNfts: cachedResult,
   });
 };
 
