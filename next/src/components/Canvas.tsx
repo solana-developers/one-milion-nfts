@@ -56,6 +56,7 @@ export default function Canvas(props: CanvasProps) {
   const [tooltip, setTooltip] = useState<string>("");
   const [nftAddress, setNftAddress] = useState<string>("");
   const [hoverPixel, setHoverPixel] = useState<boolean>(false);
+  const [isMouseOut, setIsMouseOut] = useState<boolean>(false);
 
   // update last offset
   useEffect(() => {
@@ -155,7 +156,13 @@ export default function Canvas(props: CanvasProps) {
         scale
       );
       context.translate(offsetDiff.x, offsetDiff.y);
-      setViewportTopLeft((prevVal) => diffPoints(prevVal, offsetDiff));
+      const transform = context?.getTransform();
+
+      const transformOffset = {
+        x: -transform?.e / transform?.a,
+        y: -transform?.f / transform?.a,
+      };
+      setViewportTopLeft(transformOffset);
       isResetRef.current = false;
     }
   }, [context, offset, scale]);
@@ -190,13 +197,13 @@ export default function Canvas(props: CanvasProps) {
         }
       }
 
-      if (nftPixel && nftPixelName) {
+      if (nftPixel && nftPixelName && !isMouseOut) {
         setTooltip("Position-Color: "+ nftPixelName);
         setNftAddress(nftPixel.o);
         newHoverPixel = true;
       }
       
-      console.log("Redraw canvas " + newHoverPixel);
+      //console.log("Redraw canvas " + newHoverPixel);
       setHoverPixel(newHoverPixel);
        
       context.fillStyle = props.color;
@@ -228,14 +235,21 @@ export default function Canvas(props: CanvasProps) {
         // For the pixel that will be drawn we need to local position on the canvas
         var canvasBoundingBox = canvasRef.current.getBoundingClientRect();
 
+        const transform = context?.getTransform() as DOMMatrix;
+
+        const transformOffset = {
+          x: -transform?.e / transform?.a,
+          y: -transform?.f / transform?.a,
+        };
+
         const topLeftCanvasPos = {
           x: canvasBoundingBox.left,
           y: canvasBoundingBox.top,
         };
-
+       
         const newLocal = diffPoints(viewportMousePos, topLeftCanvasPos);
-        let posOnCanvasX = newLocal.x + (viewportTopLeft.x * scale);
-        let posOnCanvasY = newLocal.y + (viewportTopLeft.y * scale);
+        let posOnCanvasX = newLocal.x + (transformOffset.x * scale);
+        let posOnCanvasY = newLocal.y + (transformOffset.y * scale);
 
         const xPixel = Math.floor(posOnCanvasX / scale);
         const yPixel = Math.floor(posOnCanvasY / scale);
@@ -252,16 +266,23 @@ export default function Canvas(props: CanvasProps) {
       // On mouse out we need to reset the hoveredPixel because otherwise the canvas would draw on top of color picker
       event.preventDefault();
       setHoverPixel(false);
-      console.log("Mouse out");
-      setPixelPosition({x: -1, y: -1});
+      //console.log("Mouse out");
+      setIsMouseOut(true);
+      //setPixelPosition({x: -1, y: -1});
     }
-
+    
+    function handleMouseOver(event: MouseEvent) {
+      // On mouse out we need to reset the hoveredPixel because otherwise the canvas would draw on top of color picker
+      setIsMouseOut(false);
+    }
     canvasElem.addEventListener("mousemove", handleUpdateMouse);
     canvasElem.addEventListener("mouseout", handleMouseOut);
+    canvasElem.addEventListener("mouseover", handleMouseOver);
     canvasElem.addEventListener("wheel", handleUpdateMouse);
     return () => {
       canvasElem.removeEventListener("mousemove", handleUpdateMouse);
       canvasElem.removeEventListener("mouseout", handleMouseOut);
+      canvasElem.removeEventListener("mouseover", handleMouseOver);
       canvasElem.removeEventListener("wheel", handleUpdateMouse);
     };
   }, [offset, scale, pixelPosition, mousePos, viewportTopLeft]);
@@ -300,9 +321,14 @@ export default function Canvas(props: CanvasProps) {
         context.scale(zoom, zoom);
         context.translate(-newViewportTopLeft.x, -newViewportTopLeft.y);
 
-        setViewportTopLeft(newViewportTopLeft);
-        
-        setScale(newScale);
+        const transform = context?.getTransform();
+
+        const transformOffset = {
+          x: -transform?.e / transform?.a,
+          y: -transform?.f / transform?.a,
+        };
+        setViewportTopLeft({ x: transformOffset.x, y: transformOffset.y});
+        setScale(transform?.a / 2);
         isResetRef.current = false;
       }
     }
