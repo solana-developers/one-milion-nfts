@@ -40,7 +40,6 @@ export default function SinglePixelCanvas(props: CanvasProps) {
     if (!context) return;
     context.fillStyle = props.color;
     context.fillRect(0, 0, props.canvasWidth, props.canvasHeight);
-    console.log("drawing");
   }, [context]);
 
   return (

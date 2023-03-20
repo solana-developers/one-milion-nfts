@@ -8,6 +8,8 @@ import globalCache from 'global-cache';
 import { MyPixel } from '@/src/components/MyPixels';
 import { NftPixel } from '@/src/components/Grid';
 import { Console } from 'console';
+import { createClient } from 'redis';
+const {gzip, ungzip} = require('node-gzip');
 
 type POST = {
   transaction: string;
@@ -56,9 +58,28 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const y = Number.parseInt(yString);
   const pubkey = getFromPayload(req, 'Query', 'pubkey');
 
-  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(globalCache.get("allNfts") as string);
+  const client = createClient({ url: process.env.REDIS_URL??"" });
+
+  client.on("error", (error) => console.error(`Ups : ${error}`));
+  await client.connect();
+
+  const cachedResult = await client.get("allNfts");
+  if (cachedResult === null) {
+    res.status(500).json({
+      message: "Cache is empty",
+    });
+    return;
+  }
+
+  let base64Buffer = new Buffer(cachedResult, 'base64');
+  const unzippedData = await ungzip(base64Buffer)
+
+  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(unzippedData.toString());
   parsedNfts[x][y].o = pubkey;
-  globalCache.set("allNfts", JSON.stringify(parsedNfts));
+  const compressed = await gzip(JSON.stringify(parsedNfts))
+  const compressedBase64 = Buffer.from(compressed).toString('base64'); 
+  const result = await client.set("allNfts", compressedBase64);
+
   console.log("Changed owner: " + parsedNfts[x][y].c + " to " + x + " " + y + " to " + pubkey);
 
   res.status(200).json({

@@ -45,10 +45,12 @@
     "nearest-color": "^0.4.4",
     "next": "13.1.2",
     "node-cache": "^5.1.2",
+    "node-gzip": "^1.1.2",
     "qrcode": "^1.5.1",
     "react": "^18.2.0",
     "react-color": "^2.19.3",
     "react-dom": "18.2.0",
+    "redis": "^4.6.5",
     "sha256": "^0.2.0",
     "typescript": "4.9.4"
   },

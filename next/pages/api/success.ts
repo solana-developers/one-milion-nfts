@@ -8,6 +8,8 @@ import globalCache from 'global-cache';
 import { MyPixel } from '@/src/components/MyPixels';
 import { NftPixel } from '@/src/components/Grid';
 import { Console } from 'console';
+import { createClient } from 'redis';
+const {gzip, ungzip} = require('node-gzip');
 
 type POST = {
   transaction: string;
@@ -17,7 +19,6 @@ type POST = {
 type GET = {
   message: string;
 };
-
 
 function getFromPayload(req: NextApiRequest, payload: string, field: string): string {
   function parseError() { throw new Error(`${payload} parse error: missing ${field}`) };
@@ -62,15 +63,36 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     });
     return;
   }
+  const client = createClient({ url: process.env.REDIS_URL??"" });
+
+  client.on("error", (error) => console.error(`Ups : ${error}`));
+  await client.connect();
+
   const pubkey = getFromPayload(req, 'Query', 'pubkey');
 
   console.log("color " + color);
   const noHashTagColor = color.replace("#", "");
 
-  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(globalCache.get("allNfts") as string);
+  const cachedResult = await client.get("allNfts");
+  if (cachedResult === null) {
+    res.status(500).json({
+      message: "Cache is empty",
+    });
+    return;
+  }
+
+  let base64Buffer = new Buffer(cachedResult, 'base64');
+  const unzippedData = await ungzip(base64Buffer)
+
+  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(unzippedData.toString());
   parsedNfts[x][y].c = noHashTagColor;
   parsedNfts[x][y].o = pubkey;
-  globalCache.set("allNfts", JSON.stringify(parsedNfts));
+  const compressed = await gzip(JSON.stringify(parsedNfts))
+  const compressedBase64 = Buffer.from(compressed).toString('base64'); 
+  const result = await client.set("allNfts", compressedBase64);
+
+  console.log(result);
+  
   console.log("added color to cache: #" + parsedNfts[x][y].c + " to " + x + " " + y + " for " + pubkey);
 
   res.status(200).json({

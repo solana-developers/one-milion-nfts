@@ -2,7 +2,8 @@
 import { NftPixel } from '@/src/components/Grid';
 import { CollectionMint, CONNECTION } from '@/src/util/const';
 import type { NextApiRequest, NextApiResponse, NextConfig } from 'next';
-import globalCache from 'global-cache';
+import { createClient } from 'redis';
+const {gzip, ungzip} = require('node-gzip');
 
 type POST = {
   transaction: string;
@@ -39,77 +40,25 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
+  const client = createClient({ url: process.env.REDIS_URL??"" });
 
-  let allNfts: string = "[[]]";
+  client.on("error", (error) => console.error(`Ups : ${error}`));
+  await client.connect();
 
-  if (globalCache.get("caching") == "true") {
+  const cachedResult = await client.get("allNfts");
+
+  if (!cachedResult) {
     res.status(200).json({
-      allNfts,
+      allNfts: cachedResult?.toString() || "[]",
     });
     return;
   }
 
-
-  if (globalCache.has("allNfts")) {
-    allNfts = globalCache.get("allNfts") as string;
-  } else {
-    globalCache.set("caching", "true");
-    const sortBy = {
-      sortBy: "created",
-      sortDirection: "asc",
-    };
-
-    const allAssetsOwned = await CONNECTION.getAllAssetsByGroup(
-      "collection",
-      CollectionMint.toBase58(),
-      sortBy,
-      1000,
-      1,
-      "",
-      ""
-    );
-
-    console.log(allAssetsOwned);
-    var nftGrid = new Array<Array<NftPixel>>(1000);
-
-    for (var i = 0; i < nftGrid.length; i++) {
-      nftGrid[i] = new Array<NftPixel>(1000);
-    }
-  
-    for (var i = 0; i < nftGrid.length; i++) {
-      var cube = nftGrid[i];
-      for (var j = 0; j < cube.length; j++) {
-        nftGrid[i][j] = new NftPixel();
-      }
-    }
-
-    for (var i = 0; i < allAssetsOwned.length; i++) {
-      const nft = allAssetsOwned[i];
-      const name = nft.content.metadata.name;
-      //console.log(name);
-      try {
-        const x = name.split(".")[0];
-        const y = name.split(".")[1].split("-")[0];
-        let color = name.split(".")[1].split("-")[1];
-        color = color.replace("#", "");
-        nftGrid[x][y].c = color;
-        nftGrid[x][y].o = nft.ownership.owner;
-      } catch (e) {
-        //console.log("error " + e);
-      }
-    }
-    globalCache.set("allNfts", JSON.stringify(nftGrid));
-    allNfts = JSON.stringify(nftGrid);
-    globalCache.delete("caching");
-  }
-
-  const size = new TextEncoder().encode(allNfts).length
-  const kiloBytes = size / 1024;
-  const megaBytes = kiloBytes / 1024;
-  console.log("megabytes: " + megaBytes);
+  let base64Buffer = new Buffer(cachedResult, 'base64');
+  const unzippedData = await ungzip(base64Buffer)
 
   res.status(200).json({
-    allNfts, 
+    allNfts: unzippedData.toString(),
   });
 };
 

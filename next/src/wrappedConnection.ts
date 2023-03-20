@@ -45,10 +45,9 @@ export class WrappedConnection extends Connection {
         id: "compression-example",
         params: [assetId, sortBy, limit, page, before, after],
       });
-      console.log("Owner response" + response.data);
+
       return response.data.result;
     } catch (error) {
-      console.log("Owner response");
       console.error(error);
     }
   }

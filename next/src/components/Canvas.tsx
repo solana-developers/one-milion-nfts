@@ -169,7 +169,7 @@ export default function Canvas(props: CanvasProps) {
 
   // draw
   useLayoutEffect(() => {
-            setHoverPixel(false);
+    setHoverPixel(false);
 
     if (context) {
       if (!context) return;
@@ -185,7 +185,6 @@ export default function Canvas(props: CanvasProps) {
       for (var x = 0; x < 1000; x++) {
         for (var y = 0; y < 1000; y++) {
           let pixel = props.nftPixels[x][y];
-
           if (pixel.c != "ffffffff") {
             context.fillStyle = "#"+pixel.c;
             context.fillRect(x, y, 1, 1);
@@ -270,7 +269,7 @@ export default function Canvas(props: CanvasProps) {
       setIsMouseOut(true);
       //setPixelPosition({x: -1, y: -1});
     }
-    
+
     function handleMouseOver(event: MouseEvent) {
       // On mouse out we need to reset the hoveredPixel because otherwise the canvas would draw on top of color picker
       setIsMouseOut(false);
@@ -327,6 +326,7 @@ export default function Canvas(props: CanvasProps) {
           x: -transform?.e / transform?.a,
           y: -transform?.f / transform?.a,
         };
+
         setViewportTopLeft({ x: transformOffset.x, y: transformOffset.y});
         setScale(transform?.a / 2);
         isResetRef.current = false;
