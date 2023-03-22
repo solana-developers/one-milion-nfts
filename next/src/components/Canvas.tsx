@@ -173,7 +173,7 @@ export default function Canvas(props: CanvasProps) {
 
     if (context) {
       if (!context) return;
-      context.fillStyle = "#1e1e1e";
+      context.fillStyle = "#FAF9F6";
       // Need to clean a bit more since we will be able to move the canvas
       context.clearRect(-6000, -6000, 12000, 12000);
       context.fillRect(0, 0, props.canvasWidth, props.canvasHeight);
