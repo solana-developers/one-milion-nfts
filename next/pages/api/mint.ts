@@ -8,6 +8,8 @@ import globalCache from 'global-cache';
 import { MyPixel } from '@/src/components/MyPixels';
 import { NftPixel } from '@/src/components/Grid';
 import { Console } from 'console';
+import { createClient } from 'redis';
+const {gzip, ungzip} = require('node-gzip');
 
 type POST = {
   transaction: string;
@@ -69,6 +71,35 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     });
     return;
   }
+
+  const client = createClient({ url: process.env.REDIS_URL??"" });
+  client.on("error", (error) => console.error(`Ups s: ${error}`));
+  await client.connect();
+
+  const cachedResult = await client.get("allNfts");
+  if (cachedResult === null) {
+    client.quit();
+    res.status(500).json({
+      transaction: "",
+      message: "Redis error",
+    });
+    return;
+  }
+
+  let base64Buffer = new Buffer(cachedResult, 'base64');
+  const unzippedData = await ungzip(base64Buffer)
+
+  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(unzippedData.toString());
+  if (parsedNfts[x][y].o != "") {
+    client.quit();
+    res.status(400).json({
+      transaction: "",
+      message: "Pixel already taken",
+    });
+    return;
+  };
+  client.quit();
+
   const pubkey = getFromPayload(req, 'Query', 'pubkey');
   const feepayer: PublicKey = new PublicKey(pubkey);
   

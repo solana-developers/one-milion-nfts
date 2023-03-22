@@ -74,11 +74,10 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
       nftGrid[i][j] = new NftPixel();
     }
   }
-
   for (var i = 0; i < allAssetsOwned.length; i++) {
     const nft = allAssetsOwned[i];
     const name = nft.content.metadata.name;
-    //console.log(name);
+    //console.log(JSON.stringify(nft));
     try {
       const x = name.split(".")[0];
       const y = name.split(".")[1].split("-")[0];

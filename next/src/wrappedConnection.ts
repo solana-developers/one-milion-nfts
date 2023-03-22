@@ -1,10 +1,11 @@
 import { Connection } from "@solana/web3.js";
 import axios from "axios";
+import { METAPLEX_READAPI } from "./util/const";
 
 export class WrappedConnection extends Connection {
   async getAsset(assetId: any): Promise<any> {
     try {
-      const response = await axios.post(this.rpcEndpoint, {
+      const response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_asset",
         id: "compression-example",
@@ -18,7 +19,7 @@ export class WrappedConnection extends Connection {
 
   async getAssetProof(assetId: any): Promise<any> {
     try {
-      const response = await axios.post(this.rpcEndpoint, {
+      const response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_asset_proof",
         id: "compression-example",
@@ -39,13 +40,13 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
-      const response = await axios.post(this.rpcEndpoint, {
+      const response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_assets_by_owner",
-        id: "compression-example",
+        id: "rpd-op-123",
         params: [assetId, sortBy, limit, page, before, after],
       });
-
+      //console.log("getAssetsByOwner: " + JSON.stringify(response.data));
       return response.data.result;
     } catch (error) {
       console.error(error);
@@ -61,7 +62,7 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
-      const response = await axios.post(this.rpcEndpoint, {
+      const response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_assets_by_creator",
         id: "compression-example",
@@ -83,7 +84,7 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
-      const response = await axios.post(this.rpcEndpoint, {
+      const response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_assets_by_authority",
         id: "compression-example",
@@ -107,7 +108,7 @@ export class WrappedConnection extends Connection {
     try {
       let events = [];
 
-      const response = await axios.post(this.rpcEndpoint, {
+      const response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_assets_by_group",
         id: "rpd-op-123",
@@ -132,19 +133,20 @@ export class WrappedConnection extends Connection {
   ): Promise<any> {
     try {
       let events = [];
-      let response = await axios.post(this.rpcEndpoint, {
+      let response = await axios.post(METAPLEX_READAPI, {
         jsonrpc: "2.0",
         method: "get_assets_by_group",
         id: "rpd-op-123",
         params: [groupKey, groupValue, sortBy, limit, page, before, after],
       });
+
       events.push(...response.data.result.items);
-      
+
       while (true) {        
         console.log("Requested page" + page);
 
         page += 1;
-        response = await axios.post(this.rpcEndpoint, {
+        response = await axios.post(METAPLEX_READAPI, {
           jsonrpc: "2.0",
           method: "get_assets_by_group",
           id: "rpd-op-123",

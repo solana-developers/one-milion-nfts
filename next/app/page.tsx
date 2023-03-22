@@ -100,7 +100,7 @@ export default function Home() {
       CONNECTION,
       TreeAccount
     );
-    console.log(treeAccount);
+    console.log(JSON.stringify(treeAccount));
     setTreeAccount(treeAccount);
   };
 
@@ -192,7 +192,11 @@ export default function Home() {
         });
 
         console.log("Mint Signature: " + signature);
-        await CONNECTION.confirmTransaction(signature, "confirmed");
+        const result = await CONNECTION.confirmTransaction(signature, "confirmed");
+        if (result.value.err) {
+          console.log("Mint failed "+ JSON.stringify(result.value.err));
+          return;
+        }
 
         url =
           currentBaseUrl +
@@ -205,7 +209,7 @@ export default function Home() {
           "&pubkey=" +
           publicKey.toBase58();
         // After the mint we inform the backend that the mint was successful to add it to the cache.
-        // Probably not the best way to do it. We could also mint in the backend, but I dont have that much sol. 
+        // Probably not the best way to do it. We could also mint in the backend, but I don't have that much sol. 
         // Or use a helius webhook to listen to the tree and then update the cache. 
         await fetch(url);
 
