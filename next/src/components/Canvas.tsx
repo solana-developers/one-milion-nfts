@@ -122,7 +122,8 @@ export default function Canvas(props: CanvasProps) {
 
       if (mouseDownPosition.x == event.pageX && mouseDownPosition.y == event.pageY) {
         if (hoverPixel) {
-          window.alert("You clicked on a pixel that is already minted!");
+          
+          window.alert("This Pixel is owned by: " + props.nftPixels[pixelPosition.x][pixelPosition.y].o);
           return;
         }
         if (scale < 3) {
