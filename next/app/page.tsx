@@ -26,6 +26,7 @@ import TransferAdressInput from "@/src/components/TransferAdressInput";
 import ColorPicker from "@/src/components/CustomColorPicker";
 import { NftPixel } from "../src/components/Grid";
 import { MyPixel } from "../src/components/MyPixels";
+import { AppBar } from "@/src/components/AppBar";
 
 export default function Home() {
   const [treeAccount, setTreeAccount] = useState<any>();
@@ -287,7 +288,7 @@ export default function Home() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-[url('../public/bg.png')]">
+    <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed">
       {/* {publicKey && <Upload/>} This is a shadow drive implementation in case you want to upload meta data or images*/}
 
       {loading && (
@@ -307,17 +308,9 @@ export default function Home() {
         </div>
       )}
 
-      <div className="absolute ...">{treeAccount && <WalletMultiButton />}
-        {treeAccount && (<p className="absolute left-6 text-sky-400/100  ">
-          Pixels Minted: {treeAccount.tree.sequenceNumber.toString()}
-        </p>)}
-      </div>
+      <AppBar/>
 
-
-      <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-slate-900 bg-opacity-70 pt-4">
-        <h1 className=" font-sans mt-0 mb-2 text-5xl font-medium leading-tight text-primary text-center text-fuchsia-200">
-          The One Million NFT Page
-        </h1>
+      <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-gradient-to-t from-gray-800 to-black pt-4">
 
         <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-fuchsia-50">
           Pick a color - Use mouse wheel to zoom
