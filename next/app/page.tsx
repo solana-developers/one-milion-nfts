@@ -311,6 +311,11 @@ export default function Home() {
       <AppBar/>
 
       <div className="w-full min-h-screen bg-no-repeat bg-cover bg-center bg-fixed bg-gradient-to-t from-gray-800 to-black pt-4">
+        <div className="flex justify-center gap-0">
+          {treeAccount && (<p className="text-fuchsia-50">
+            Pixels Minted: {treeAccount.tree.sequenceNumber.toString()}
+          </p>)}
+        </div>             
 
         <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-fuchsia-50">
           Pick a color - Use mouse wheel to zoom
@@ -321,8 +326,8 @@ export default function Home() {
             color={color}
             onChangeComplete={colorSketchPickerOnOkHandle}
           />
-        </div>
-        
+     
+         </div>
 
         <div className="flex justify-center gap-0">
           {allNFTsOfCollection && (

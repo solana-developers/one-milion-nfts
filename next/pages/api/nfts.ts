@@ -60,12 +60,12 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     return;
   }
 
-  /*
-  To track the size of the cached result, the maximum is 4mb 1 million nfts in gziped json are 0.41mb \o/ 
+  
+ //To track the size of the cached result, the maximum is 4mb 1 million nfts in gziped json are 0.41mb \o/ 
   const size = new TextEncoder().encode(cachedResult).length
   const kiloBytes = size / 1024;
   const megaBytes = kiloBytes / 1024;
-  console.log("megabytes compressed: " + megaBytes);*/
+  console.log("megabytes compressed: " + megaBytes);
 
   res.status(200).json({
     allNfts: cachedResult,
