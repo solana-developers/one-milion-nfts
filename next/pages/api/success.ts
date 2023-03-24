@@ -1,13 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Keypair, PublicKey } from '@solana/web3.js';
-import { CollectionMint, CONNECTION, TreeAccount } from '@/src/util/const';
-import { getCollectionDetailsFromMintAccount, mintCompressedNft } from '@/src/util/utils';
-import { Creator, TokenProgramVersion, TokenStandard } from '@metaplex-foundation/mpl-bubblegum';
-import globalCache from 'global-cache';
-import { MyPixel } from '@/src/components/MyPixels';
 import { NftPixel } from '@/src/components/Grid';
-import { Console } from 'console';
 import { createClient } from 'redis';
 const {gzip, ungzip} = require('node-gzip');
 

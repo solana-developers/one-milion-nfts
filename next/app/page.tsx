@@ -4,7 +4,6 @@ import {
   CONNECTION,
   TreeAccount,
 } from "@/src/util/const";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import {
   PublicKey,
   Transaction,
