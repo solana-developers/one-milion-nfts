@@ -100,7 +100,7 @@ export default function Home() {
       CONNECTION,
       TreeAccount
     );
-    console.log(JSON.stringify(treeAccount));
+    //console.log(JSON.stringify(treeAccount));
     setTreeAccount(treeAccount);
   };
 
@@ -109,7 +109,7 @@ export default function Home() {
       sortBy: "created",
       sortDirection: "asc",
     };
-    const limit = 500;
+    const limit = 1000;
     const page = 1;
     const before = "";
     const after = "";
@@ -123,17 +123,16 @@ export default function Home() {
     );
 
     setMyNFTs(allAssetsOwned);
-    console.log(allAssetsOwned);
+    //console.log(allAssetsOwned);
   }
 
   async function getCachedNftsFromAPI() {
     const currentBaseUrl = window.location.href;
     let result = await fetch(currentBaseUrl + "/api/nfts/");
     let data = await result.json();
-    console.log(data);
     let base64Buffer = new Buffer(data.allNfts, 'base64');
     const unzippedData = await ungzip(base64Buffer)
-    console.log(unzippedData);
+    //console.log(unzippedData);
 
     setLoading(true);
     setAllNFTsOfCollection(unzippedData.toString());      
@@ -211,13 +210,17 @@ export default function Home() {
         // After the mint we inform the backend that the mint was successful to add it to the cache.
         // Probably not the best way to do it. We could also mint in the backend, but I don't have that much sol. 
         // Or use a helius webhook to listen to the tree and then update the cache. 
-        await fetch(url);
 
         // After the mint refresh the list of collection NFTs
         //await getAssetsByGroup(CollectionMint.toBase58());
-        await getAssetsByOwner(publicKey);
+        console.log("get assets by owner");
+        getAssetsByOwner(publicKey);
+        console.log("fetch nfts");
+        await fetch(url);
+        console.log("getCachedNftsFromAPI");
         await getCachedNftsFromAPI();
-        await getMerkelTreeInfo();
+        console.log("getMerkelTreeInfo");
+        getMerkelTreeInfo();
 
       } catch (error) {
         console.log(error);

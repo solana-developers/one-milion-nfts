@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { CollectionMint, CONNECTION, TreeAccount } from '@/src/util/const';
+import { collectionMasterEditionAccount, collectionMetadataAccount, CollectionMint, CONNECTION, TreeAccount } from '@/src/util/const';
 import { getCollectionDetailsFromMintAccount, mintCompressedNft } from '@/src/util/utils';
 import { Creator, TokenProgramVersion, TokenStandard } from '@metaplex-foundation/mpl-bubblegum';
 import globalCache from 'global-cache';
@@ -105,13 +105,6 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   
   console.log("Creator" + ownerWallet.publicKey + "color " + color + "x " + x + "y " + y + "pubkey " + pubkey);
 
-  const { collectionMetadataAccount, collectionMasterEditionAccount } =
-    await getCollectionDetailsFromMintAccount(
-      CONNECTION,
-      CollectionMint,
-      ownerWallet.publicKey
-    );
-
   console.log("\n===Collection Details===");
   console.log("Mint account: " + CollectionMint.toBase58());
   console.log("Metadata account: " + collectionMetadataAccount.toBase58());
@@ -120,11 +113,11 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   );
   console.log("\n");
 
-  const creators: Creator[] = [ { address: ownerWallet.publicKey, verified: true, share: 100 } ];
-
   console.log("color " + color);
   const unescapedColor = color.replace("%23", "#");
   const noHashTagColor = color.replace("#", "");
+
+  const creators: Creator[] = [ { address: ownerWallet.publicKey, verified: true, share: 100 } ];
 
   const collection = {
     verified: true,
