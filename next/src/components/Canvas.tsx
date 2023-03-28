@@ -58,18 +58,13 @@ export default function Canvas(props: CanvasProps) {
   const [hoverPixel, setHoverPixel] = useState<boolean>(false);
   const [isMouseOut, setIsMouseOut] = useState<boolean>(false);
 
-  // update last offset
-  useEffect(() => {
-    lastOffsetRef.current = offset;
-  }, [offset]);
-
   // reset
   const reset = useCallback(
     (context: CanvasRenderingContext2D) => {
       if (context && !isResetRef.current) {
         // adjust for device pixel density
-        context.canvas.width = props.canvasWidth * ratio;
-        context.canvas.height = props.canvasHeight * ratio;
+        context.canvas.width = window.innerWidth * 0.9 * ratio;
+        context.canvas.height = window.innerWidth * 0.9 * ratio;
         context.scale(ratio, ratio);
         setScale(1);
 
@@ -92,7 +87,7 @@ export default function Canvas(props: CanvasProps) {
     (event: MouseEvent) => {
       if (context) {
         const lastMousePos = lastMousePosRef.current;
-        const currentMousePos = { x: event.pageX, y: event.pageY }; // use document so can pan off element
+        const currentMousePos = { x: event.clientX, y: event.clientY }; // use document so can pan off element
         lastMousePosRef.current = currentMousePos;
 
         const mouseDiff = diffPoints(currentMousePos, lastMousePos);
@@ -101,6 +96,11 @@ export default function Canvas(props: CanvasProps) {
     },
     [context]
   );
+
+  // update last offset
+  useEffect(() => {
+    lastOffsetRef.current = offset;
+  }, [offset]);
 
   const mouseUp = useCallback(() => {
     document.removeEventListener("mousemove", mouseMove);
@@ -111,19 +111,23 @@ export default function Canvas(props: CanvasProps) {
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       document.addEventListener("mousemove", mouseMove);
       document.addEventListener("mouseup", mouseUp);
-      setMouseDownPosition({ x: event.pageX, y: event.pageY });
-      lastMousePosRef.current = { x: event.pageX, y: event.pageY };
+      setMouseDownPosition({ x: event.clientX, y: event.clientY });
+      lastMousePosRef.current = { x: event.clientX, y: event.clientY };
     },
     [mouseMove, mouseUp]
   );
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-
-      if (mouseDownPosition.x == event.pageX && mouseDownPosition.y == event.pageY) {
+      if (
+        mouseDownPosition.x == event.clientX &&
+        mouseDownPosition.y == event.clientY
+      ) {
         if (hoverPixel) {
-          
-          window.alert("This Pixel is owned by: " + props.nftPixels[pixelPosition.x][pixelPosition.y].o);
+          window.alert(
+            "This Pixel is owned by: " +
+              props.nftPixels[pixelPosition.x][pixelPosition.y].o
+          );
           return;
         }
         if (scale < 3) {
@@ -151,13 +155,14 @@ export default function Canvas(props: CanvasProps) {
 
   // pan when offset or scale changes
   useLayoutEffect(() => {
-    if (context && lastOffsetRef.current) {
+    if (context) {
+      const transform = context?.getTransform();
       const offsetDiff = scalePoint(
         diffPoints(offset, lastOffsetRef.current),
-        scale
+        transform?.a / 2
       );
+
       context.translate(offsetDiff.x, offsetDiff.y);
-      const transform = context?.getTransform();
 
       const transformOffset = {
         x: -transform?.e / transform?.a,
@@ -187,7 +192,7 @@ export default function Canvas(props: CanvasProps) {
         for (var y = 0; y < 1000; y++) {
           let pixel = props.nftPixels[x][y];
           if (pixel.c != "ffffffff") {
-            context.fillStyle = "#"+pixel.c;
+            context.fillStyle = "#" + pixel.c;
             context.fillRect(x, y, 1, 1);
             if (x == pixelPosition.x && y == pixelPosition.y) {
               nftPixel = pixel;
@@ -198,16 +203,16 @@ export default function Canvas(props: CanvasProps) {
       }
 
       if (nftPixel && nftPixelName && !isMouseOut) {
-        setTooltip("Position-Color: "+ nftPixelName);
+        setTooltip("Position-Color: " + nftPixelName);
         setNftAddress(nftPixel.o);
         newHoverPixel = true;
       }
-      
+
       //console.log("Redraw canvas " + newHoverPixel);
       setHoverPixel(newHoverPixel);
-       
+
       context.fillStyle = props.color;
-      context.fillRect(pixelPosition.x , pixelPosition.y, 1, 1);
+      context.fillRect(pixelPosition.x, pixelPosition.y, 1, 1);
     }
   }, [
     props.canvasWidth,
@@ -217,8 +222,78 @@ export default function Canvas(props: CanvasProps) {
     offset,
     pixelPosition.x,
     pixelPosition.y,
-    props.nftPixels
+    props.nftPixels,
   ]);
+
+  function handleUpdateStartTouch(e: TouchEvent) {
+    //e.preventDefault();
+    var clkEvt = document.createEvent("MouseEvent");
+    var mydiv = document.getElementById("canvas");
+    clkEvt.initMouseEvent(
+      "mousedown",
+      true,
+      true,
+      window,
+      e.detail,
+      e.touches[0].screenX,
+      e.touches[0].screenY,
+      e.touches[0].clientX,
+      e.touches[0].clientY,
+      false,
+      false,
+      false,
+      false,
+      0,
+      e.target
+    );
+    mydiv?.dispatchEvent(clkEvt);
+  }
+  function handleUpdateEndTouch(e: TouchEvent) {
+    //e.preventDefault();
+    var clkEvt = document.createEvent("MouseEvent");
+    var mydiv = document.getElementById("canvas");
+    clkEvt.initMouseEvent(
+      "mouseup",
+      true,
+      true,
+      window,
+      e.detail,
+      0,
+      0,
+      0,
+      0,
+      false,
+      false,
+      false,
+      false,
+      0,
+      e.target
+    );
+    mydiv?.dispatchEvent(clkEvt);
+  }
+  function handleUpdateTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    var clkEvt = document.createEvent("MouseEvent");
+    var mydiv = document.getElementById("canvas");
+    clkEvt.initMouseEvent(
+      "mousemove",
+      true,
+      true,
+      window,
+      e.detail,
+      e.touches[0].screenX,
+      e.touches[0].screenY,
+      e.touches[0].clientX,
+      e.touches[0].clientY,
+      false,
+      false,
+      false,
+      false,
+      0,
+      e.target
+    );
+    mydiv?.dispatchEvent(clkEvt);
+  }
 
   // add event listener on canvas for mouse position
   useEffect(() => {
@@ -231,9 +306,9 @@ export default function Canvas(props: CanvasProps) {
       event.preventDefault();
 
       if (canvasRef.current) {
-        const viewportMousePos = { x: event.clientX, y: event.clientY };
         // For the pixel that will be drawn we need to local position on the canvas
         var canvasBoundingBox = canvasRef.current.getBoundingClientRect();
+        const viewportMousePos = { x: event.clientX, y: event.clientY };
 
         const transform = context?.getTransform() as DOMMatrix;
 
@@ -246,22 +321,22 @@ export default function Canvas(props: CanvasProps) {
           x: canvasBoundingBox.left,
           y: canvasBoundingBox.top,
         };
-       
-        const newLocal = diffPoints(viewportMousePos, topLeftCanvasPos);
-        let posOnCanvasX = newLocal.x + (transformOffset.x * scale);
-        let posOnCanvasY = newLocal.y + (transformOffset.y * scale);
 
-        const xPixel = Math.floor(posOnCanvasX / scale);
-        const yPixel = Math.floor(posOnCanvasY / scale);
+        const newLocal = diffPoints(viewportMousePos, topLeftCanvasPos);
+        let posOnCanvasX = newLocal.x + transformOffset.x * (transform?.a / 2);
+        let posOnCanvasY = newLocal.y + transformOffset.y * (transform?.a / 2);
+
+        const xPixel = Math.floor(posOnCanvasX / (transform?.a / 2));
+        const yPixel = Math.floor(posOnCanvasY / (transform?.a / 2));
 
         if (pixelPosition.x != xPixel || pixelPosition.y != yPixel) {
-          setPixelPosition({x: xPixel, y: yPixel});
-        }        
+          setPixelPosition({ x: xPixel, y: yPixel });
+        }
 
         setMousePos(newLocal);
       }
     }
-    
+
     function handleMouseOut(event: MouseEvent) {
       // On mouse out we need to reset the hoveredPixel because otherwise the canvas would draw on top of color picker
       event.preventDefault();
@@ -275,12 +350,19 @@ export default function Canvas(props: CanvasProps) {
       // On mouse out we need to reset the hoveredPixel because otherwise the canvas would draw on top of color picker
       setIsMouseOut(false);
     }
+
     canvasElem.addEventListener("mousemove", handleUpdateMouse);
+    canvasElem.addEventListener("touchmove", handleUpdateTouchMove);
+    canvasElem.addEventListener("touchstart", handleUpdateStartTouch);
+    canvasElem.addEventListener("touchend", handleUpdateEndTouch);
     canvasElem.addEventListener("mouseout", handleMouseOut);
     canvasElem.addEventListener("mouseover", handleMouseOver);
     canvasElem.addEventListener("wheel", handleUpdateMouse);
     return () => {
       canvasElem.removeEventListener("mousemove", handleUpdateMouse);
+      canvasElem.removeEventListener("touchmove", handleUpdateTouchMove);
+      canvasElem.removeEventListener("touchstart", handleUpdateStartTouch);
+      canvasElem.removeEventListener("touchend", handleUpdateEndTouch);
       canvasElem.removeEventListener("mouseout", handleMouseOut);
       canvasElem.removeEventListener("mouseover", handleMouseOver);
       canvasElem.removeEventListener("wheel", handleUpdateMouse);
@@ -299,14 +381,17 @@ export default function Canvas(props: CanvasProps) {
     // before and after zoom is relatively the same position on the viewport
     function handleWheel(event: WheelEvent) {
       event.preventDefault();
+
       if (context) {
         let zoom = 1 - event.deltaY / ZOOM_SENSITIVITY;
         let newScale = scale * zoom;
 
+        //console.log("Zoom: " + zoom + " scale: " + newScale);
         // Limit zoom so that the canvas is always visible
-        if (newScale > 10 || newScale < 0.8) {
+        if (newScale > 14 || newScale < 0.1) {
           return;
         }
+
         const viewportTopLeftDelta = {
           x: (mousePos.x / scale) * (1 - 1 / zoom),
           y: (mousePos.y / scale) * (1 - 1 / zoom),
@@ -328,7 +413,7 @@ export default function Canvas(props: CanvasProps) {
           y: -transform?.f / transform?.a,
         };
 
-        setViewportTopLeft({ x: transformOffset.x, y: transformOffset.y});
+        setViewportTopLeft({ x: transformOffset.x, y: transformOffset.y });
         setScale(transform?.a / 2);
         isResetRef.current = false;
       }
@@ -338,27 +423,66 @@ export default function Canvas(props: CanvasProps) {
     return () => canvasElem.removeEventListener("wheel", handleWheel);
   }, [context, mousePos.x, mousePos.y, viewportTopLeft, scale]);
 
-  return ( 
-    <div className={"group flex "+ (hoverPixel ? "relative" : "")}>
-      {hoverPixel &&  
-        <span className="group-hover:opacity-100 transition-opacity bg-gray-800 px-1 text-sm text-gray-100 rounded-md absolute opacity-0  mx-auto">
-          {tooltip} <br></br>
-          {nftAddress}
-        </span>
-      }
-      <canvas 
-        onMouseDown={startPan}     
-        onClick={handleClick}   
-        ref={canvasRef}
-        width={props.canvasWidth * ratio}
-        height={props.canvasHeight * ratio}
-        style={{
-          backgroundColor: "transparent",
-          border: "2px solid #000",
-          width: `${props.canvasWidth}px`,
-          height: `${props.canvasHeight}px`,
-        }}
-      ></canvas>
+  function onSliderChange(event: any) {
+    context?.resetTransform();
+    context?.scale(
+      (event.target.value * 2) as number,
+      (event.target.value * 2) as number
+    );
+
+    const transform = context?.getTransform();
+
+    if (transform === undefined) {
+      return;
+    }
+
+    const transformOffset = {
+      x: -transform?.e / transform?.a,
+      y: -transform?.f / transform?.a,
+    };
+
+    setViewportTopLeft({ x: transformOffset.x, y: transformOffset.y });
+    setScale(transform?.a / 2);
+    isResetRef.current = false;
+  }
+
+  return (
+    <div>
+      <input
+        id="minmax-range"
+        onChange={onSliderChange}
+        type="range"
+        step="0.2"
+        min="0.2"
+        max="13"
+        value={scale}
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+      />
+      <div>
+        <div className={"group flex " + (hoverPixel ? "relative" : "")}>
+          {hoverPixel && (
+            <span className="group-hover:opacity-100 transition-opacity bg-gray-800 px-1 text-sm text-gray-100 rounded-md absolute opacity-0  mx-auto">
+              {tooltip} <br></br>
+              {nftAddress}
+            </span>
+          )}
+
+          <canvas
+            id="canvas"
+            onMouseDown={startPan}
+            onClick={handleClick}
+            ref={canvasRef}
+            width={window.innerWidth* 0.9 * ratio}
+            height={window.innerWidth* 0.9* ratio}
+            style={{
+              backgroundColor: "transparent",
+              border: "2px solid #000",
+              width: `${window.innerWidth * 0.9}px`,
+              height: `${window.innerWidth * 0.9}px`,
+            }}
+          ></canvas>
+        </div>
+      </div>
     </div>
   );
 }

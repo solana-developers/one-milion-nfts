@@ -331,6 +331,14 @@ export default function Home() {
      
          </div>
 
+         {!allNFTsOfCollection && (
+            <>
+              <div className="flex justify-center gap-0 ">
+                <div className="loading-spinner">                  
+                </div>
+              </div>
+            </>
+        )}
         <div className="flex justify-center gap-0">
           {allNFTsOfCollection && (
             <>
@@ -341,6 +349,7 @@ export default function Home() {
               ></Grid>
             </>
           )}
+
         </div>
         {myNFTs && (myNFTs.items.length > 0) && (
             <>

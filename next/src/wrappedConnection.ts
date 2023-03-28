@@ -122,6 +122,7 @@ export class WrappedConnection extends Connection {
     }
   }
 
+  // This will loop through all pages and return all assets
   async getAllAssetsByGroup(
     groupKey: string,
     groupValue: string,
