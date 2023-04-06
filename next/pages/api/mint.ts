@@ -128,7 +128,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const nftArgs = {
     name: x + "." + y + "-" + unescapedColor,
     symbol: "ONEM",
-    uri: "https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/pixelMetaData.json",
+    uri: "https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/pixelMeta.json",
     creators: creators,
     editionNonce: 253,
     tokenProgramVersion: TokenProgramVersion.Original,

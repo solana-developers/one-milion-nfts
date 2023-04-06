@@ -76,20 +76,20 @@ export default function Upload() {
     }
 
     return (
-        <div>
+        <div >
             <form onSubmit={onSubmit}>
-                <h1 className="text-white">Shadow Drive File Upload</h1>
-                <input className="text-white" type="file" onChange={(e) => ( e &&e.target &&e.target.files && setFile(e.target.files[0]))} />
+                <h1 className="text-black">Shadow Drive File Upload</h1>
+                <input className="text-black" type="file" onChange={(e) => ( e &&e.target &&e.target.files && setFile(e.target.files[0]))} />
                 <br />
-                <button className="text-white" type="submit">Upload</button>
+                <button className="text-black" type="submit">Upload</button>
             </form>
-            <span className="text-white">You may have to wait 60-120s for the URL to appear</span>
+            <span className="text-black">You may have to wait 60-120s for the URL to appear</span>
             <div>
                 {(uploadUrl) ? (
                     <div>
-                        <h3 className="text-white">Success!</h3>
-                        <h4 className="text-white">URL: {uploadUrl}</h4>
-                        <h4 className="text-white">Sig: {txnSig}</h4>
+                        <h3 className="text-black">Success!</h3>
+                        <h4 className="text-black">URL: {uploadUrl}</h4>
+                        <h4 className="text-black">Sig: {txnSig}</h4>
                     </div>
                 ) : (<div></div>)
                 }

@@ -38,7 +38,6 @@ export const Grid: FC<Props> = ({
         canvasWidth={1000}
         canvasHeight={1000}
       ></Canvas>
-
     </div>
   );
 };

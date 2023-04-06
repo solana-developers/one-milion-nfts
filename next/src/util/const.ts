@@ -30,6 +30,8 @@ export const collectionMasterEditionAccount = new PublicKey("2jF5C8yErRtp52CgYY9
 Mint account: 7Nbk8nKHXisM9busRg3aXHWmZ7J2uPTKBWcXieNJt6on
 Metadata account: 6SPni9gRv9vvqKD3y9aurL9DbEVVMrVXSATEiw8RDuh9
 Master edition account: HXWEggbuy5WUDLrp11S4jaUn2YQJ3x7c53kBCDcWNH9U
+collection json: https://shdw-drive.genesysgo.net/3guJ8ud32sragdu1JWUULCny1Qr7mMfynDuMv5nSqQ3a/collectionMeta.json
+Nft json: https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/pixelMeta.json
 */ 
 
 /*

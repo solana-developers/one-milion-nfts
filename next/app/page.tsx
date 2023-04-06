@@ -327,8 +327,7 @@ export default function Home() {
           <ColorPicker
             color={color}
             onChangeComplete={colorSketchPickerOnOkHandle}
-          />
-     
+          />     
          </div>
 
          {!allNFTsOfCollection && (

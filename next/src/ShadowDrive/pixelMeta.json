@@ -1,0 +1,28 @@
+{
+    "name": "One of a Million pixels",
+    "symbol": "ONEM",
+    "description": "Solana has a HUGE problem. Compressed NFTs are way to cheap. This is the solution, we just mint every pixel of a picture as a NFT. Introducing the https://www.OneMillionNfts.page/",
+    "seller_fee_basis_points": 420,
+    "image": "https://shdw-drive.genesysgo.net/3guJ8ud32sragdu1JWUULCny1Qr7mMfynDuMv5nSqQ3a/nft1m.png",
+    "attributes": [
+      {
+        "trait_type": "Color",
+        "value": "It's in the name"
+      }
+    ],
+    "properties": {
+      "files": [
+        {
+          "uri": "https://shdw-drive.genesysgo.net/3guJ8ud32sragdu1JWUULCny1Qr7mMfynDuMv5nSqQ3a/nft1m.png",
+          "type": "image/png"
+        }
+      ],
+      "creators": [
+        {
+          "address": "own33ZZxFvSAbmKdNWyi5jcyacVJCDF4ZJzuAGi8hQf",
+          "share": 100
+        }
+      ],
+      "category": "image"
+    }
+  }
