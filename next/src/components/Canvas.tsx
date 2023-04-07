@@ -14,7 +14,7 @@ type CanvasProps = {
   canvasHeight: number;
   nftPixels: Array<Array<NftPixel>>;
   color: any;
-  onClickCallback: (x: Number, y: Number) => void;
+  onClickCallback: (x: number, y: number) => void;
 };
 
 type Point = {

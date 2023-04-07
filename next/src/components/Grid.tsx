@@ -6,7 +6,7 @@ const Canvas = dynamic(() => import("./Canvas"), { ssr: false });
 
 type Props = {
   children?: React.ReactNode;
-  onClickCallback: (x: Number, y: Number) => void;
+  onClickCallback: (x: number, y: number) => void;
   allNFTs: any;
   selectedColor: any;
 };
