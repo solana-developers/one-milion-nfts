@@ -18,7 +18,7 @@ export class NftPixel {
   constructor() {
     this.c = "ffffffff";
     this.o = "";
-  }
+  } 
 }
 
 export const Grid: FC<Props> = ({
@@ -27,7 +27,7 @@ export const Grid: FC<Props> = ({
   allNFTs,
   selectedColor,
 }) => {
-  let nftGrid: Array<Array<NftPixel>> = JSON.parse(allNFTs);
+  let nftGrid: Array<Array<NftPixel>> = allNFTs;
 
   return (
     <div>

@@ -29,9 +29,9 @@ import { AppBar } from "@/src/components/AppBar";
 
 export default function Home() {
   const [treeAccount, setTreeAccount] = useState<any>();
-  const [allNFTsOfCollection, setAllNFTsOfCollection] = useState<any>();
+  const [allNFTsOfCollection, setAllNFTsOfCollection] = useState<Array<Array<NftPixel>>>();
   const [myNFTs, setMyNFTs] = useState<any>();
-  const { publicKey, sendTransaction } = useWallet();
+  const {publicKey, sendTransaction } = useWallet();
   const [color, setColor] = React.useState<string>("");
   const [loading, setLoading] = React.useState(false);
   const [transferInProgress, setTransferInProgress] = React.useState(false);
@@ -135,7 +135,7 @@ export default function Home() {
     //console.log(unzippedData);
 
     setLoading(true);
-    setAllNFTsOfCollection(unzippedData.toString());      
+    setAllNFTsOfCollection(JSON.parse(unzippedData.toString()));      
     setLoading(false);
   }
 
@@ -157,13 +157,15 @@ export default function Home() {
     getAssetsByOwner(publicKey);
   }, [publicKey]);
 
-  const mintCompressedNFT = async (x: Number, y: Number, color: string) => {
-    if (publicKey == undefined) {
+  const mintCompressedNFT = async (x: number, y: number, color: string) => {
+    if (publicKey == undefined || allNFTsOfCollection == undefined) {
       return;
     }
+
     setLoading(true);
     const getPartialSignedTransactionFromApiAndSign = async () => {
       try {
+
         const escapedColor = color.replace("#", "%23");
         const currentBaseUrl = window.location.href;
         console.log(currentBaseUrl);
@@ -216,9 +218,14 @@ export default function Home() {
         console.log("get assets by owner");
         getAssetsByOwner(publicKey);
         console.log("fetch nfts");
-        await fetch(url);
+        
+        let pixel = allNFTsOfCollection[x][y];
+        pixel.c = color.replace("#", "");
+        pixel.o = publicKey.toBase58();
+
+        fetch(url);
         console.log("getCachedNftsFromAPI");
-        await getCachedNftsFromAPI();
+        //await getCachedNftsFromAPI();
         console.log("getMerkelTreeInfo");
         getMerkelTreeInfo();
 
@@ -232,7 +239,7 @@ export default function Home() {
     setLoading(false);
   };
 
-  function OnGridItemClicked(x: Number, y: Number): void {
+  function OnGridItemClicked(x: number, y: number): void {
     if (!publicKey) {
       alert("Please connect wallet to mint a pixel.");
       return;
@@ -320,7 +327,7 @@ export default function Home() {
         </div>             
 
         <h2 className="mt-0 mb-4 text-xl font-medium leading-tight text-primary text-center text-fuchsia-50">
-          Pick a color - Use mouse wheel to zoom
+          Connect your wallet, pick a color, and start drawing with NFTs!
         </h2>
        
         <div className="flex justify-center gap-0">
