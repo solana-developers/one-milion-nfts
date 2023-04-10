@@ -2,6 +2,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { NftPixel } from '@/src/components/Grid';
 import { createClient } from 'redis';
+import { CONNECTION, REDIS_KEY } from '@/src/util/const';
+import { SystemProgram, Transaction } from '@solana/web3.js';
 const {gzip, ungzip} = require('node-gzip');
 
 type POST = {
@@ -49,6 +51,8 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   const yString = getFromPayload(req, 'Query', 'y');
   const y = Number.parseInt(yString);
   const colorString = getFromPayload(req, 'Query', 'color');
+  const transaction = getFromPayload(req, 'Query', 'transaction');
+
   const color = colorString;
   if (!isColor(color)) {
     res.status(400).json({
@@ -56,6 +60,17 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
     });
     return;
   }
+
+  const simulation = await CONNECTION.getSignatureStatus(transaction);
+  console.log(simulation);
+
+  if (simulation === null || simulation?.value?.confirmationStatus === "finalized") {
+    res.status(400).json({
+      message: "Invalid transaction",
+    });
+    return;
+  }
+
   const client = createClient({ url: process.env.REDIS_URL??"" });
 
   client.on("error", (error) => console.error(`Ups s: ${error}`));
@@ -66,29 +81,43 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   console.log("color " + color);
   const noHashTagColor = color.replace("#", "");
 
-  const cachedResult = await client.get("allNfts");
-  if (cachedResult === null) {
-    client.quit();
-    res.status(500).json({
-      message: "Cache is empty",
-    });
-    return;
+  let success  = false;
+  while (!success) {
+    try {
+
+      client.watch(REDIS_KEY) 
+      let cachedResult = await client.get(REDIS_KEY) 
+      let multi = await client.multi()
+
+      if (cachedResult === null) {
+        client.quit();
+        res.status(500).json({
+          message: "Cache is empty",
+        });
+        return;
+      }
+
+      let base64Buffer = new Buffer(cachedResult, 'base64');
+      const unzippedData = await ungzip(base64Buffer)
+
+      let parsedNfts: Array<Array<NftPixel>> = JSON.parse(unzippedData.toString());
+      parsedNfts[x][y].c = noHashTagColor;
+      parsedNfts[x][y].o = pubkey;
+      const compressed = await gzip(JSON.stringify(parsedNfts))
+      const compressedBase64 = Buffer.from(compressed).toString('base64'); 
+
+      multi.set(REDIS_KEY, compressedBase64) 
+      let execResult = await multi.exec();    
+      console.log(execResult);
+    
+      console.log("added color to cache: #" + parsedNfts[x][y].c + " to " + x + " " + y + " for " + pubkey);
+      success = true;
+    } catch (e) {
+      console.log("Transaction failed, retrying...");
+    }
   }
-
-  let base64Buffer = new Buffer(cachedResult, 'base64');
-  const unzippedData = await ungzip(base64Buffer)
-
-  let parsedNfts: Array<Array<NftPixel>> = JSON.parse(unzippedData.toString());
-  parsedNfts[x][y].c = noHashTagColor;
-  parsedNfts[x][y].o = pubkey;
-  const compressed = await gzip(JSON.stringify(parsedNfts))
-  const compressedBase64 = Buffer.from(compressed).toString('base64'); 
-  const result = await client.set("allNfts", compressedBase64);
   client.quit();
   
-  console.log(result);
-  
-  console.log("added color to cache: #" + parsedNfts[x][y].c + " to " + x + " " + y + " for " + pubkey);
 
   res.status(200).json({
     message: "OK",

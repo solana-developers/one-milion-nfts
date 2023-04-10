@@ -5,9 +5,9 @@ import { METAPLEX_READAPI } from "./util/const";
 export class WrappedConnection extends Connection {
   async getAsset(assetId: any): Promise<any> {
     try {
-      const response = await axios.post(METAPLEX_READAPI, {
+      const response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_asset",
+        method: "getAsset",
         id: "compression-example",
         params: [assetId],
       });
@@ -19,9 +19,9 @@ export class WrappedConnection extends Connection {
 
   async getAssetProof(assetId: any): Promise<any> {
     try {
-      const response = await axios.post(METAPLEX_READAPI, {
+      const response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_asset_proof",
+        method: "getAssetProof",
         id: "compression-example",
         params: [assetId],
       });
@@ -40,9 +40,9 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
-      const response = await axios.post(METAPLEX_READAPI, {
+      const response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_assets_by_owner",
+        method: "getAssetsByOwner",
         id: "rpd-op-123",
         params: [assetId, sortBy, limit, page, before, after],
       });
@@ -62,9 +62,9 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
-      const response = await axios.post(METAPLEX_READAPI, {
+      const response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_assets_by_creator",
+        method: "getAssetsByCreator",
         id: "compression-example",
         params: [assetId, true, sortBy, limit, page, null, null],
       });
@@ -84,9 +84,9 @@ export class WrappedConnection extends Connection {
     after: string
   ): Promise<any> {
     try {
-      const response = await axios.post(METAPLEX_READAPI, {
+      const response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_assets_by_authority",
+        method: "getAssetsByAuthority",
         id: "compression-example",
         params: [assetId, sortBy, limit, page, before, after],
       });
@@ -108,9 +108,9 @@ export class WrappedConnection extends Connection {
     try {
       let events = [];
 
-      const response = await axios.post(METAPLEX_READAPI, {
+      const response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_assets_by_group",
+        method: "getAssetsByGroup",
         id: "rpd-op-123",
         params: [groupKey, groupValue, sortBy, limit, page, before, after],
       });
@@ -134,9 +134,9 @@ export class WrappedConnection extends Connection {
   ): Promise<any> {
     try {
       let events = [];
-      let response = await axios.post(METAPLEX_READAPI, {
+      let response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
         jsonrpc: "2.0",
-        method: "get_assets_by_group",
+        method: "getAssetsByGroup",
         id: "rpd-op-123",
         params: [groupKey, groupValue, sortBy, limit, page, before, after],
       });
@@ -147,9 +147,9 @@ export class WrappedConnection extends Connection {
         console.log("Requested page" + page);
 
         page += 1;
-        response = await axios.post(METAPLEX_READAPI, {
+        response = await axios.post(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : METAPLEX_READAPI, {
           jsonrpc: "2.0",
-          method: "get_assets_by_group",
+          method: "getAssetsByGroup",
           id: "rpd-op-123",
           params: [groupKey, groupValue, sortBy, limit, page, before, after],
         });
@@ -165,7 +165,6 @@ export class WrappedConnection extends Connection {
       console.error(error);
     }
   }
-
 }
 
 

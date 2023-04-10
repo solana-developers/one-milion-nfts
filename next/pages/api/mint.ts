@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { collectionMasterEditionAccount, collectionMetadataAccount, CollectionMint, CONNECTION, TreeAccount } from '@/src/util/const';
+import { collectionMasterEditionAccount, collectionMetadataAccount, CollectionMint, CONNECTION, REDIS_KEY, TreeAccount } from '@/src/util/const';
 import { getCollectionDetailsFromMintAccount, mintCompressedNft } from '@/src/util/utils';
 import { Creator, TokenProgramVersion, TokenStandard } from '@metaplex-foundation/mpl-bubblegum';
 import globalCache from 'global-cache';
@@ -76,7 +76,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   client.on("error", (error) => console.error(`Ups s: ${error}`));
   await client.connect();
 
-  const cachedResult = await client.get("allNfts");
+  const cachedResult = await client.get(REDIS_KEY);
   if (cachedResult === null) {
     client.quit();
     res.status(500).json({

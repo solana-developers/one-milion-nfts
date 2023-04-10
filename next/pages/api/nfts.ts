@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { NftPixel } from '@/src/components/Grid';
-import { CollectionMint, CONNECTION } from '@/src/util/const';
+import { CollectionMint, CONNECTION, REDIS_KEY } from '@/src/util/const';
 import type { NextApiRequest, NextApiResponse, NextConfig } from 'next';
 import { createClient } from 'redis';
 const {gzip, ungzip} = require('node-gzip');
@@ -51,7 +51,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   });
   await client.connect();
 
-  const cachedResult = await client.get("allNfts");
+  const cachedResult = await client.get(REDIS_KEY);
   client.quit();
   if (!cachedResult) {
     res.status(200).json({

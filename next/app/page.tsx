@@ -72,7 +72,7 @@ export default function Home() {
       });
       console.log("signature: " + signature);
       await CONNECTION.confirmTransaction(signature, "confirmed");
-    
+
       const currentBaseUrl = window.location.href;
       let url =
           currentBaseUrl +
@@ -130,6 +130,7 @@ export default function Home() {
     const currentBaseUrl = window.location.href;
     let result = await fetch(currentBaseUrl + "/api/nfts/");
     let data = await result.json();
+
     let base64Buffer = new Buffer(data.allNfts, 'base64');
     const unzippedData = await ungzip(base64Buffer)
     //console.log(unzippedData);
@@ -183,6 +184,12 @@ export default function Home() {
         console.log(url);
 
         const response = await fetch(url);
+        if (!response.ok) {
+          console.log("Mint failed");
+          window.alert("Pixel already minted, refreshing nfts.");
+          getCachedNftsFromAPI();
+          return;
+        }
         const jsonResponse = await response.json(); //extract JSON from the http response
 
         const decodedTx = Buffer.from(jsonResponse.transaction, "base64");
@@ -208,11 +215,12 @@ export default function Home() {
           "&color=" +
           escapedColor +
           "&pubkey=" +
-          publicKey.toBase58();
+          publicKey.toBase58() +
+          "&transaction=" + signature;
         // After the mint we inform the backend that the mint was successful to add it to the cache.
         // Probably not the best way to do it. We could also mint in the backend, but I don't have that much sol. 
         // Or use a helius webhook to listen to the tree and then update the cache. 
-
+        // console.log(url);
         // After the mint refresh the list of collection NFTs
         //await getAssetsByGroup(CollectionMint.toBase58());
         console.log("get assets by owner");
@@ -225,7 +233,7 @@ export default function Home() {
 
         fetch(url);
         console.log("getCachedNftsFromAPI");
-        //await getCachedNftsFromAPI();
+        //getCachedNftsFromAPI();
         console.log("getMerkelTreeInfo");
         getMerkelTreeInfo();
 

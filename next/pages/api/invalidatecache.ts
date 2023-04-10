@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { NftPixel } from '@/src/components/Grid';
-import { CollectionMint, CONNECTION } from '@/src/util/const';
+import { CollectionMint, CONNECTION, REDIS_KEY } from '@/src/util/const';
 import { atob } from 'buffer';
 import type { NextApiRequest, NextApiResponse, NextConfig } from 'next';
 import { createClient } from 'redis';
@@ -100,9 +100,9 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
 //  console.log("compressed: " + compressed);
 
   const compressedBase64 = Buffer.from(compressed).toString('base64');
- // console.log("compressedBase64: " + compressedBase64);
-  
-  const result = await client.set("allNfts", compressedBase64);
+  console.log("compressedBase64: " + compressedBase64);
+   
+  const result = await client.set(REDIS_KEY, compressedBase64);
  // console.log(result);
 
   let buff = new Buffer(compressedBase64, 'base64');
@@ -118,7 +118,7 @@ const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
   console.log("megabytes compressed: " + megaBytes);
   //console.log("data compressed: " + Buffer.from(JSON.stringify(nftGrid)).toString('base64'));
   client.quit();
-
+ 
   res.status(200).json({
     allNfts: compressedBase64, 
   });
