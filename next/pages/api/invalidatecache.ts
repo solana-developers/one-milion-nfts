@@ -41,7 +41,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 const get = async (req: NextApiRequest, res: NextApiResponse<GET>) => {
-
+  // Private API. 1000 rpc calls would kill the rpc node if multiple people hit this endpoint at the same time.
+  return;
   const client = createClient({ url: process.env.REDIS_URL??"" });
 
   client.on("error", (error) => console.error(`Ups inv: ${error}`));
