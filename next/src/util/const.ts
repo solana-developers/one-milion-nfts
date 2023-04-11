@@ -7,7 +7,7 @@ export const CONNECTION = new WrappedConnection(process.env.NEXT_PUBLIC_RPC ? pr
   });
 
   export const METAPLEX_READAPI = "https://read-api.metaplex.com";
-  export const REDIS_KEY = "allNfts3";
+  export const REDIS_KEY = "allNfts4";
 
   export const CONNECTION_MAINNET = new WrappedConnection(process.env.NEXT_PUBLIC_RPC ? process.env.NEXT_PUBLIC_RPC : 'add your rpc here or as in .env.local',   {
     wsEndpoint: process.env.NEXT_PUBLIC_WSS_RPC ? process.env.NEXT_PUBLIC_WSS_RPC : "wss:// add your rpc here .env.local",
